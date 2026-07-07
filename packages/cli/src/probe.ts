@@ -39,13 +39,17 @@ export async function probe(opts: ProbeOptions): Promise<void> {
 
   const server = createServer((req, res) => {
     if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
-      // Record the real request headers in wire order.
+      // Record the real request headers in wire order. Sensitive headers are
+      // redacted — they carry secrets (cookies, tokens) and add nothing to a
+      // fingerprint; we keep only presence + length.
+      const REDACT = new Set(['cookie', 'authorization', 'proxy-authorization', 'set-cookie']);
       headerOrder = [];
       navHeaders = {};
       for (let i = 0; i < req.rawHeaders.length; i += 2) {
         const name = req.rawHeaders[i]!.toLowerCase();
+        const value = req.rawHeaders[i + 1] ?? '';
         headerOrder.push(name);
-        navHeaders[name] = req.rawHeaders[i + 1] ?? '';
+        navHeaders[name] = REDACT.has(name) ? `[redacted, ${value.length} bytes]` : value;
       }
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       res.end(pageHtml(opts.label));
