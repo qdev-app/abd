@@ -5,6 +5,12 @@
       "type": "registry:component",
       "title": "Browser Detector",
       "description": "Animated widget that identifies the real browser behind a spoofed/shared User-Agent using live signals."
+    },
+    {
+      "name": "install-duo",
+      "type": "registry:component",
+      "title": "Install Duo",
+      "description": "Two live-detected install buttons: one for the visitor's browser, one for the mainstream browser of its engine (e.g. Zen → Firefox). Shows a button only when a link is provided."
     }
   ]
 }

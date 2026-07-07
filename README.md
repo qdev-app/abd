@@ -13,22 +13,22 @@ A User-Agent string is trivially faked, and whole families of browsers deliberat
 
 ## Quick start
 
-Requires **Node 18+**, **[pnpm](https://pnpm.io)**, and **[bun](https://bun.sh)** (used to launch scripts).
+Uses **[bun](https://bun.sh)** as both the package manager and the launcher.
 
 ```bash
-pnpm install
-pnpm build        # build @abd/core and @abd/cli
-pnpm test         # run the detection fixtures
+bun install
+bun run build     # build @abd/core and @abd/cli
+bun run test      # run the detection fixtures
 ```
 
 ### CLI
 
 ```bash
 # Offline: parse a User-Agent string (cannot see through Firefox forks)
-pnpm abd "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+bun run abd "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
 
 # Live: serve a page, open it in the browser you want to identify (Zen, Arc, Brave…)
-pnpm serve --once
+bun run serve --once
 #   → open http://localhost:4747 in that browser; the verdict prints in your terminal
 ```
 
@@ -37,26 +37,41 @@ pnpm serve --once
 ### Web app
 
 ```bash
-pnpm dev:web      # http://localhost:5173
+bun run dev:web   # http://localhost:5173
 ```
 
-### shadcn component
+### shadcn components
 
-The web app hosts a [shadcn registry](https://ui.shadcn.com/docs/registry). After deploying it, add the widget to any React app:
+The web app hosts a [shadcn registry](https://ui.shadcn.com/docs/registry) with two items. After deploying it, add them to any React app:
 
 ```bash
 npx shadcn@latest add https://<your-deployed-host>/r/browser-detector.json
+npx shadcn@latest add https://<your-deployed-host>/r/install-duo.json
 ```
+
+**`browser-detector`** — full detection card:
 
 ```tsx
 import { BrowserDetector } from '@/components/browser-detector';
 
-export default function Page() {
-  return <BrowserDetector onResult={(r) => console.log(r.browser.name, r.spoofed)} />;
-}
+<BrowserDetector onResult={(r) => console.log(r.browser.name, r.spoofed)} />;
 ```
 
-Regenerate the registry JSON after editing the component: `pnpm registry`.
+**`install-duo`** — two live-detected install buttons: a **primary** for the visitor's browser and a **secondary** for the mainstream browser of its engine (Chrome for Blink, Firefox for Gecko, Safari for WebKit). A button appears **only when you supply a link for it**, so a Zen visitor with just a Firefox link sees a single Firefox button:
+
+```tsx
+import { InstallDuo } from '@/components/install-duo';
+
+<InstallDuo
+  links={{
+    chrome: 'https://chromewebstore.google.com/…',
+    firefox: 'https://addons.mozilla.org/…',
+    // no Zen link needed — Gecko visitors fall back to the Firefox button
+  }}
+/>;
+```
+
+Regenerate the registry JSON after editing a component: `bun run registry`.
 
 ## How detection works
 
@@ -79,7 +94,7 @@ The strongest signals per family:
 
 ### Adding a signature
 
-Signatures are small `evaluate(signals) → Evidence[]` functions in `packages/core/src/signatures/`. Return the evidence that fired (with weights); an empty array means no match. Add fixtures to `packages/core/test/fixtures.mjs` and run `pnpm test`. **PRs adding new tells — especially for Zen and other chrome-only forks — are very welcome.**
+Signatures are small `evaluate(signals) → Evidence[]` functions in `packages/core/src/signatures/`. Return the evidence that fired (with weights); an empty array means no match. Add fixtures to `packages/core/test/fixtures.mjs` and run `bun run test`. **PRs adding new tells — especially for Zen and other chrome-only forks — are very welcome.**
 
 ## Layout
 

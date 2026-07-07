@@ -1,6 +1,6 @@
 // Smoke test for live-signal detection using the built dist.
 // Run: node packages/core/test/fixtures.mjs
-import { detect } from '../dist/index.js';
+import { detect, resolveInstallTargets } from '../dist/index.js';
 
 const base = {
   vendor: '',
@@ -95,6 +95,30 @@ asrt(detect(fixtures['Arc (claims Chrome, CSS var exposes it)']).browser.name ==
 asrt(detect(fixtures['Stock Firefox (live, no fork markers)']).browser.name === 'Mozilla Firefox', 'Firefox not detected');
 asrt(detect(fixtures['LibreWolf-ish Firefox with RFP (claims Firefox)']).browser.name === 'LibreWolf', 'LibreWolf not detected');
 asrt(detect(fixtures['Tor Browser (letterboxed + full RFP)']).browser.name === 'Tor Browser', 'Tor not detected');
+
+// --- Install target resolution ---
+console.log('\n=== resolveInstallTargets ===');
+const links = { firefox: 'https://addons.mozilla.org/x', chrome: 'https://chrome.google.com/x', edge: 'https://edge/x' };
+
+// Zen-style: detected Firefox, only a Firefox link → single Firefox button.
+const zen = resolveInstallTargets(detect(fixtures['Stock Firefox (live, no fork markers)']), links);
+console.log('  firefox/zen  → current:', zen.current?.browser ?? null, '| mainstream:', zen.mainstream?.browser ?? null);
+asrt(zen.current?.browser === 'Mozilla Firefox', 'Firefox current link should resolve');
+asrt(zen.mainstream === null, 'no duplicate mainstream button when current IS mainstream');
+
+// Brave: no Brave link, but Blink engine → mainstream Chrome button, no current.
+const brave = resolveInstallTargets(detect(fixtures['Brave (claims Chrome, live signals expose it)']), links);
+console.log('  brave        → current:', brave.current?.browser ?? null, '| mainstream:', brave.mainstream?.browser ?? null);
+asrt(brave.current === null, 'no Brave-specific link ⇒ no current button');
+asrt(brave.mainstream?.browser === 'Google Chrome', 'Brave should fall back to Chrome mainstream link');
+
+// Brave WITH a Brave link → current Brave + mainstream Chrome (distinct URLs).
+const braveBoth = resolveInstallTargets(detect(fixtures['Brave (claims Chrome, live signals expose it)']), {
+  ...links,
+  brave: 'https://brave/x',
+});
+asrt(braveBoth.current?.browser === 'Brave', 'Brave-specific link ⇒ current button');
+asrt(braveBoth.mainstream?.browser === 'Google Chrome', 'Brave + Chrome links ⇒ both buttons');
 
 console.log(fail === 0 ? '\nALL ASSERTIONS PASSED ✓' : `\n${fail} ASSERTION(S) FAILED ✗`);
 process.exit(fail === 0 ? 0 : 1);

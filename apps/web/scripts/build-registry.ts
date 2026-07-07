@@ -2,7 +2,7 @@
  * Generates the shadcn-installable registry JSON files under public/r/ from the
  * source manifest (registry.json) by inlining each referenced file's contents.
  *
- * Run: bun scripts/build-registry.ts  (or: pnpm --filter @abd/web registry)
+ * Run: bun scripts/build-registry.ts  (or: bun run registry)
  *
  * Consumers then install with:
  *   npx shadcn@latest add https://<your-host>/r/browser-detector.json

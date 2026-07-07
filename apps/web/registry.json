@@ -17,6 +17,21 @@
           "target": "components/browser-detector.tsx"
         }
       ]
+    },
+    {
+      "name": "install-duo",
+      "type": "registry:component",
+      "title": "Install Duo",
+      "description": "Two live-detected install buttons: one for the visitor's browser, one for the mainstream browser of its engine (e.g. Zen → Firefox). Shows a button only when a link is provided.",
+      "dependencies": ["@abd/core", "motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/registry/install-duo.tsx",
+          "type": "registry:component",
+          "target": "components/install-duo.tsx"
+        }
+      ]
     }
   ]
 }
