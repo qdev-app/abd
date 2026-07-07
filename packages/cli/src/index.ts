@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { detect, signalsFromUA } from '@abd/core';
+import { detect, signalsFromUA } from '@qdev-app/abd-core';
 import { renderResult } from './render.js';
 import { serve } from './serve.js';
 import { probe } from './probe.js';

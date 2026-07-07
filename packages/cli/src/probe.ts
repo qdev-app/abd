@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { diffProbes, type Probe, type DiffEntry } from '@abd/core';
+import { diffProbes, type Probe, type DiffEntry } from '@qdev-app/abd-core';
 import * as esbuild from 'esbuild';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

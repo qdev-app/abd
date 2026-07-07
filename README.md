@@ -4,7 +4,7 @@ Identify the **real** browser behind a spoofed or shared User-Agent.
 
 A User-Agent string is trivially faked, and whole families of browsers deliberately reuse another browser's UA: **Brave** and **Arc** ship Chrome's UA, **Zen / Floorp / Mullvad** ship Firefox's UA, and privacy builds (**LibreWolf**, **Tor Browser**) blend in on purpose. `abd` compares the UA's *claim* against **live behavioural signals** that a page can't easily fake — `userAgentData.brands`, `navigator.brave.isBrave()`, Gecko-only `navigator.oscpu`, Arc's injected CSS variable, resist-fingerprinting tells — and flags the mismatches.
 
-- 🧠 **`@abd/core`** — a pure-TS detection engine (signals → ranked candidates + engine + spoof verdict)
+- 🧠 **`@qdev-app/abd-core`** — a pure-TS detection engine (signals → ranked candidates + engine + spoof verdict)
 - 🖥️ **`@abd/cli`** — `abd serve` captures a live signature from any browser you point at it; `abd "<ua>"` parses a UA offline
 - 🌐 **web app** — React + Tailwind + Motion page that detects *your* browser
 - 📦 **shadcn registry** — drop the detector into any React app: `npx shadcn add …/r/browser-detector.json`
@@ -17,7 +17,7 @@ Uses **[bun](https://bun.sh)** as both the package manager and the launcher.
 
 ```bash
 bun install
-bun run build     # build @abd/core and @abd/cli
+bun run build     # build @qdev-app/abd-core and @abd/cli
 bun run test      # run the detection fixtures
 ```
 

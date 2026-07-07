@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import type { DetectionResult } from '@abd/core';
+import type { DetectionResult } from '@qdev-app/abd-core';
 import { BrowserDetector } from './registry/browser-detector';
 import { InstallDuo } from './registry/install-duo';
 
@@ -79,7 +79,7 @@ export default function App() {
       )}
 
       <footer className="mt-auto pt-8 text-center text-xs text-neutral-400">
-        Built with <code>@abd/core</code> · React · Tailwind · Motion
+        Built with <code>@qdev-app/abd-core</code> · React · Tailwind · Motion
       </footer>
     </main>
   );

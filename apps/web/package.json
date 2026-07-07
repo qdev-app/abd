@@ -13,7 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@abd/core": "workspace:*",
+    "@qdev-app/abd-core": "workspace:*",
     "motion": "^11.11.17",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

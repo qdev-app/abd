@@ -1,4 +1,4 @@
-import type { DetectionResult } from '@abd/core';
+import type { DetectionResult } from '@qdev-app/abd-core';
 
 const useColor = process.stdout.isTTY && !process.env.NO_COLOR;
 const c = (code: string, s: string) => (useColor ? `\x1b[${code}m${s}\x1b[0m` : s);

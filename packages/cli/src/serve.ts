@@ -1,8 +1,8 @@
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { detect } from '@abd/core';
-import type { Signals } from '@abd/core';
+import { detect } from '@qdev-app/abd-core';
+import type { Signals } from '@qdev-app/abd-core';
 import * as esbuild from 'esbuild';
 import { renderResult } from './render.js';
 
@@ -80,7 +80,7 @@ export async function serve(opts: ServeOptions): Promise<void> {
   );
 }
 
-/** Bundle the browser collector entry (imports @abd/core) into a single file. */
+/** Bundle the browser collector entry (imports @qdev-app/abd-core) into a single file. */
 async function buildClient(): Promise<string> {
   const entry = resolve(__dirname, 'client/entry.js');
   const result = await esbuild.build({

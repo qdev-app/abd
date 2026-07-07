@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { collectProbe } from '@abd/core';
+import { collectProbe } from '@qdev-app/abd-core';
 
 /** Collects an expanded discovery probe and ships it to the CLI. */
 async function main() {

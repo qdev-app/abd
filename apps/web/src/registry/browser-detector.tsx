@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { collectSignals, detect, type DetectionResult } from '@abd/core';
+import { collectSignals, detect, type DetectionResult } from '@qdev-app/abd-core';
 
 export interface BrowserDetectorProps {
   /** Called once detection completes. */

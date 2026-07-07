@@ -8,7 +8,7 @@ import {
   resolveInstallTargets,
   type DetectionResult,
   type InstallTarget,
-} from '@abd/core';
+} from '@qdev-app/abd-core';
 
 export interface InstallDuoProps {
   /**

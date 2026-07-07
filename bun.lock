@@ -12,7 +12,7 @@
       "name": "@abd/web",
       "version": "0.1.0",
       "dependencies": {
-        "@abd/core": "workspace:*",
+        "@qdev-app/abd-core": "workspace:*",
         "motion": "^11.11.17",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
@@ -35,7 +35,7 @@
         "abd": "./dist/index.js",
       },
       "dependencies": {
-        "@abd/core": "workspace:*",
+        "@qdev-app/abd-core": "workspace:*",
         "esbuild": "^0.24.0",
       },
       "devDependencies": {
@@ -43,7 +43,7 @@
       },
     },
     "packages/core": {
-      "name": "@abd/core",
+      "name": "@qdev-app/abd-core",
       "version": "0.1.0",
     },
   },
@@ -53,8 +53,6 @@
   ],
   "packages": {
     "@abd/cli": ["@abd/cli@workspace:packages/cli"],
-
-    "@abd/core": ["@abd/core@workspace:packages/core"],
 
     "@abd/web": ["@abd/web@workspace:apps/web"],
 
@@ -157,6 +155,8 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
+
+    "@qdev-app/abd-core": ["@qdev-app/abd-core@workspace:packages/core"],
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-beta.27", "", {}, "sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA=="],
 

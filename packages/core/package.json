@@ -1,5 +1,5 @@
 {
-  "name": "@abd/core",
+  "name": "@qdev-app/abd-core",
   "version": "0.1.0",
   "description": "Advanced Browser Detector — engine-level detection of the real browser behind a spoofed UA",
   "license": "MIT",

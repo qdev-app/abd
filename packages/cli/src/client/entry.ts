@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
-import { collectSignals } from '@abd/core';
-import type { DetectionResult } from '@abd/core';
+import { collectSignals } from '@qdev-app/abd-core';
+import type { DetectionResult } from '@qdev-app/abd-core';
 
 /**
  * Runs inside the *target* browser that the user opens against `abd serve`.
