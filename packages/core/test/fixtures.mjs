@@ -79,7 +79,7 @@ const fixtures = {
     chromeWidth: 277,
     chromeHeight: 80,
   },
-  'Zen (sidebar hidden — no tell but GPC, honest floor)': {
+  'Zen (windowed, sidebar hidden — floating window still detects)': {
     ...base,
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
     oscpu: 'Intel Mac OS X 10.15',
@@ -87,14 +87,31 @@ const fixtures = {
     css: { '-moz-appearance:none': true },
     globals: { MozAppearance: true },
     globalPrivacyControl: true,
-    // Sidebar hidden: Zen drops the bottom chrome too, so it's geometrically
-    // identical to stock Firefox. Only GPC remains → NOT reliably Zen.
+    // Sidebar hidden but still WINDOWED: Zen's floating window keeps the right +
+    // bottom insets, so it's still detectable even without the sidebar.
+    chromeLeft: 0,
+    chromeRight: 8,
+    chromeTop: 40,
+    chromeBottom: 8,
+    chromeWidth: 8,
+    chromeHeight: 48,
+  },
+  'Zen (fullscreen — no insets, honest floor)': {
+    ...base,
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
+    oscpu: 'Intel Mac OS X 10.15',
+    productSub: '20100101',
+    css: { '-moz-appearance:none': true },
+    globals: { MozAppearance: true },
+    globalPrivacyControl: true,
+    // True fullscreen: the floating insets collapse, so Zen is geometrically
+    // identical to Firefox. Only GPC remains → NOT reliably Zen. This is the floor.
     chromeLeft: 0,
     chromeRight: 0,
-    chromeTop: 72,
+    chromeTop: 0,
     chromeBottom: 0,
     chromeWidth: 0,
-    chromeHeight: 72,
+    chromeHeight: 0,
   },
   'Firefox with vertical tabs + GPC (must NOT be Zen)': {
     ...base,
@@ -199,11 +216,14 @@ const zenR = detect(fixtures['Zen (GPC + Zen-profile sidebar)']);
 console.log('  Zen (sidebar shown) → top:', zenR.browser.name);
 asrt(zenR.browser.name === 'Zen Browser', 'Zen with sidebar should be the top pick');
 asrt(zenR.notes.some((n) => n.includes('heuristic')), 'Zen heuristic caveat note should be present');
-// Zen with sidebar HIDDEN → geometrically identical to Firefox (no bottom chrome),
-// so only GPC remains and it is NOT reliably Zen. This is the honest floor.
-const zenHidden = detect(fixtures['Zen (sidebar hidden — no tell but GPC, honest floor)']);
-console.log('  Zen (sidebar hidden) → top:', zenHidden.browser.name, '(expected Firefox — floor)');
-asrt(zenHidden.browser.name === 'Mozilla Firefox', 'Zen with sidebar hidden is indistinguishable from Firefox (only GPC)');
+// Zen windowed with sidebar HIDDEN → still detected via the floating-window insets.
+const zenHidden = detect(fixtures['Zen (windowed, sidebar hidden — floating window still detects)']);
+console.log('  Zen (windowed, sidebar hidden) → top:', zenHidden.browser.name);
+asrt(zenHidden.browser.name === 'Zen Browser', 'Windowed Zen without sidebar should STILL detect (floating window)');
+// Zen FULLSCREEN → insets collapse → indistinguishable from Firefox (the floor).
+const zenFs = detect(fixtures['Zen (fullscreen — no insets, honest floor)']);
+console.log('  Zen (fullscreen) → top:', zenFs.browser.name, '(expected Firefox — floor)');
+asrt(zenFs.browser.name === 'Mozilla Firefox', 'Fullscreen Zen has no geometric tell (floor)');
 // Firefox vertical tabs + GPC must NOT read as Zen (no bottom bar).
 const ffvt = detect(fixtures['Firefox with vertical tabs + GPC (must NOT be Zen)']);
 console.log('  Firefox-VT → top:', ffvt.browser.name);

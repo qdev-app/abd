@@ -73,24 +73,26 @@ export const firefoxSignatures: Signature[] = [
         const gpc = s.globalPrivacyControl === true;
         const haveInsets = s.chromeLeft != null;
         const sidebarW = s.chromeLeft ?? s.chromeWidth ?? 0;
-        const leftSidebar = (s.chromeLeft ?? 0) >= 120 && (s.chromeRight ?? 99) <= 40;
-        // With its sidebar open, Zen renders a small bottom chrome inset that NO
-        // Firefox variant has (stock and vertical-tabs both report exactly 0).
-        // The size is variable (~8–40px), so we only require it to be clearly
-        // non-zero — and we require the sidebar too, so a transient/glitchy inset
-        // with no sidebar (e.g. Zen with the sidebar hidden) can't false-fire.
-        const bottomInset = (s.chromeBottom ?? 0) >= 5;
+        const leftSidebar = (s.chromeLeft ?? 0) >= 120;
+        // Zen's floating window insets content from the RIGHT and BOTTOM edges
+        // (its rounded-window design) — edges where a browser normally has zero
+        // chrome. Every Firefox variant sits flush there (chromeRight/Bottom = 0).
+        // This is independent of the sidebar, toolbar, and bookmarks bar; it only
+        // goes away when Zen is truly fullscreen. That's the cleanest tell.
+        const rightInset = (s.chromeRight ?? 0) >= 4;
+        const bottomInset = (s.chromeBottom ?? 0) >= 4;
+        const floatingWindow = rightInset && bottomInset;
 
         if (gpc)
           ev.push({ signal: 'Global Privacy Control on by default (Zen default; stock Firefox is off)', weight: 1 });
 
-        if (leftSidebar && bottomInset) {
+        if (floatingWindow) {
           ev.push({
-            signal: `~${sidebarW}px left sidebar + ${s.chromeBottom}px bottom chrome inset — Zen's layout (Firefox vertical tabs has a sidebar but no bottom chrome)`,
+            signal: `${s.chromeRight}px right + ${s.chromeBottom}px bottom chrome insets — Zen's floating window (Firefox content is flush to those edges)`,
             weight: 3,
           });
-          if (gpc)
-            ev.push({ signal: 'GPC + Zen sidebar/bottom-inset constellation (excludes stock Firefox and Firefox vertical tabs)', weight: 1 });
+          if (leftSidebar) ev.push({ signal: `~${sidebarW}px left sidebar also consistent with Zen`, weight: 0.5 });
+          if (gpc) ev.push({ signal: 'GPC + Zen floating-window constellation (excludes all Firefox variants)', weight: 1 });
         } else if (!haveInsets && sidebarW >= 120) {
           // No decomposed insets ⇒ can't separate Zen from Firefox vertical tabs.
           ev.push({
