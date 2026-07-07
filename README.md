@@ -34,6 +34,19 @@ bun run serve --once
 
 `abd serve` starts a local server, hands the target browser a signal-collector page, and prints the detection (add `--json` for machine output, `--once` to exit after the first result). This is the path that can actually unmask a Firefox fork, because it reads live feature signals the UA string can't carry.
 
+### Discovering new signatures (`abd probe`)
+
+Some forks (notably **Zen**) ship the Firefox UA and don't obviously alter `navigator`, so detection needs a *tell*. `abd probe` hunts for one empirically: it captures a wide net of candidate signals — every `window` global, every `--*` CSS custom property on `<html>`/`<body>`, channel-gated JS/CSS features, and chrome geometry (Zen's vertical tabs change `outerWidth − innerWidth`) — then diffs two browsers.
+
+```bash
+bun run abd probe --label firefox                 # capture in stock Firefox
+bun run abd probe --label zen --compare firefox   # capture in Zen, diff vs Firefox
+```
+
+Anything that shows up as a **stable** difference (an injected global, a `--zen-*` variable, a feature only its build enables) becomes a new entry in `packages/core/src/signatures/firefox.ts`. This is exactly how Arc's `--arc-palette-title` marker was turned into a signature.
+
+> Note: Zen's [own issue #9439 "Zen has a unique fingerprint"](https://github.com/zen-browser/desktop/issues/9439) confirms it is *not* trying to hide — it ships an unusual Firefox version, which is itself distinguishing. `abd probe` is how you find the concrete signal on your build.
+
 ### Web app
 
 ```bash

@@ -1,6 +1,6 @@
 // Smoke test for live-signal detection using the built dist.
 // Run: node packages/core/test/fixtures.mjs
-import { detect, resolveInstallTargets } from '../dist/index.js';
+import { detect, resolveInstallTargets, diffProbes } from '../dist/index.js';
 
 const base = {
   vendor: '',
@@ -119,6 +119,33 @@ const braveBoth = resolveInstallTargets(detect(fixtures['Brave (claims Chrome, l
 });
 asrt(braveBoth.current?.browser === 'Brave', 'Brave-specific link ⇒ current button');
 asrt(braveBoth.mainstream?.browser === 'Google Chrome', 'Brave + Chrome links ⇒ both buttons');
+
+// --- Probe diffing (signature discovery) ---
+console.log('\n=== diffProbes ===');
+const mkProbe = (over = {}) => ({
+  meta: { userAgent: 'ff', buildID: '20181001000000' },
+  geometry: { chromeHeight: 80, innerWidth: 1200 },
+  globals: ['CSS', 'document', 'navigator', 'window'],
+  rootCssVars: {},
+  bodyCssVars: {},
+  features: { 'navigator.oscpu': true },
+  css: { '-moz-appearance:none': true },
+  media: { 'prefers-color-scheme:dark': false },
+  ...over,
+});
+const ffProbe = mkProbe();
+const zenProbe = mkProbe({
+  globals: ['CSS', 'document', 'navigator', 'window', '__zenBrowser'],
+  rootCssVars: { '--zen-primary-color': '#f0f' },
+  geometry: { chromeHeight: 40, innerWidth: 1120 },
+});
+const d = diffProbes(ffProbe, zenProbe);
+console.log('  globals only in current :', d.globalsOnlyInCurrent);
+console.log('  root vars changed       :', d.rootVarsChanged.map((e) => e.key));
+console.log('  geometry changed        :', d.geometryChanged.map((e) => e.key));
+asrt(d.globalsOnlyInCurrent.includes('__zenBrowser'), 'diff should catch an injected global');
+asrt(d.rootVarsChanged.some((e) => e.key === '--zen-primary-color'), 'diff should catch an injected CSS var');
+asrt(d.geometryChanged.some((e) => e.key === 'chromeHeight'), 'diff should catch chrome geometry change');
 
 console.log(fail === 0 ? '\nALL ASSERTIONS PASSED ✓' : `\n${fail} ASSERTION(S) FAILED ✗`);
 process.exit(fail === 0 ? 0 : 1);
