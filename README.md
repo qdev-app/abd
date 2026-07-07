@@ -47,6 +47,17 @@ Anything that shows up as a **stable** difference (an injected global, a `--zen-
 
 > Note: Zen's [own issue #9439 "Zen has a unique fingerprint"](https://github.com/zen-browser/desktop/issues/9439) confirms it is *not* trying to hide — it ships an unusual Firefox version, which is itself distinguishing. `abd probe` is how you find the concrete signal on your build.
 
+### TLS / JA4 network fingerprint (`abd tls`)
+
+The TLS ClientHello is chosen by the browser's network stack, not by page JS, so it **can't be spoofed from the web** the way a User-Agent can — ideal for catching headless bots and UA liars.
+
+```bash
+bun run tls            # builds, then runs the HTTPS server on :4443 under Node
+# open https://localhost:4443 (accept the self-signed cert) or: curl -k https://localhost:4443/
+```
+
+It peeks the raw ClientHello, computes **JA4** (and JA3), then terminates TLS normally so the page still loads. Look the JA4 up in a database like [ja4db.com](https://ja4db.com) to map it to a client. (Runs under Node, not bun — bun's server-side TLS wrapping is incomplete; the `bun run tls` script handles that for you. Needs `openssl` on PATH for a throwaway dev cert.) Note: it won't separate same-engine forks — Zen and Firefox share Gecko's TLS stack.
+
 ### Web app
 
 ```bash
@@ -94,7 +105,14 @@ Regenerate the registry JSON after editing a component: `bun run registry`.
 2. **Signature registry** — each browser contributes weighted *evidence*; candidates are ranked by score. See [`packages/core/src/signatures/`](packages/core/src/signatures).
 3. **UA claim** — parsed naively and trusted, then compared to the winner. Disagreement ⇒ `spoofed: true`.
 
-The strongest signals per family:
+On top of the per-browser signatures, several cross-cutting techniques harden detection and catch spoofers:
+
+- **Engine cross-confirmation** — V8-only `Intl.v8BreakIterator` / `Error.captureStackTrace`, SpiderMonkey's `InternalError`, and V8-vs-`fn@url` stack format make the Blink/Gecko/WebKit call near-unspoofable.
+- **UA↔version consistency** ([`version.ts`](packages/core/src/version.ts)) — maps web features to the engine version they shipped in and flags a UA that under-reports its version (e.g. a UA claiming Chrome 90 while `Array.fromAsync` — Chrome 121+ — is present). Catches frozen/spoofed UAs and bots.
+- **RFP / hardening measurement** — measured `performance.now()` timer resolution (Tor clamps to ~100 ms) and a canvas-readback block turn the Tor/LibreWolf heuristic into a measurement.
+- **TLS / JA4** (`abd tls`) — a JS-proof network-stack fingerprint.
+
+The strongest per-family signals:
 
 | Browser | Tell |
 | --- | --- |

@@ -3,6 +3,7 @@ import { detect, signalsFromUA } from '@abd/core';
 import { renderResult } from './render.js';
 import { serve } from './serve.js';
 import { probe } from './probe.js';
+import { tlsServe } from './tls.js';
 
 const HELP = `
 abd — Advanced Browser Detector
@@ -13,6 +14,7 @@ USAGE
   abd "<user-agent string>"     Detect from a UA string (offline, UA-only)
   abd serve [options]           Serve a page; open it in a browser to get a live signature
   abd probe [options]           Capture an expanded discovery probe; diff two browsers
+  abd tls [options]             Report the TLS/JA4 fingerprint of any browser that connects
   abd --help                    Show this help
 
 SERVE OPTIONS
@@ -24,6 +26,11 @@ PROBE OPTIONS
   --label <s>    Save this run to abd-probe-<label>.json (default: default)
   --compare <s>  Diff against a previously-saved abd-probe-<s>.json
   --port <n>     Port to listen on (default: 4747)
+
+TLS OPTIONS
+  --port <n>     HTTPS port to listen on (default: 4443)
+  --once         Print the first fingerprint, then exit
+                 (needs openssl on PATH to mint a throwaway dev cert)
 
 NOTES
   UA-only mode cannot distinguish Firefox forks (Zen, Floorp, Mullvad) that reuse
@@ -56,6 +63,11 @@ async function main(argv: string[]): Promise<void> {
   if (args[0] === 'probe') {
     const port = numFlag(args, '--port', 4747);
     await probe({ port, label: strFlag(args, '--label', 'default'), compare: strFlag(args, '--compare', '') || undefined });
+    return;
+  }
+
+  if (args[0] === 'tls') {
+    await tlsServe({ port: numFlag(args, '--port', 4443), once: args.includes('--once') });
     return;
   }
 

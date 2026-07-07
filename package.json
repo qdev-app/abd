@@ -11,8 +11,9 @@
     "dev:web": "bun run --filter '@abd/web' dev",
     "abd": "bun packages/cli/src/index.ts",
     "serve": "bun packages/cli/src/index.ts serve",
+    "tls": "bun run --filter '@abd/cli' build && node packages/cli/dist/index.js tls",
     "registry": "bun run --filter '@abd/web' registry",
-    "test": "bun run --filter '@abd/core' test",
+    "test": "bun run build && bun run --filter '*' test",
     "typecheck": "bun run --filter '*' typecheck"
   },
   "devDependencies": {
