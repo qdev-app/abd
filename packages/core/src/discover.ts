@@ -23,6 +23,14 @@ export interface Probe {
   css: Record<string, boolean>;
   /** matchMedia() probes, incl. Gecko-specific media features. */
   media: Record<string, boolean>;
+  /** navigator.sendBeacon() return value (false ⇒ beacon.enabled disabled). */
+  beaconReturned?: boolean;
+  /** Server-filled: request header values (lower-cased) from the navigation. */
+  requestHeaders?: Record<string, string>;
+  /** Server-filled: header names in wire order — a fork may reorder/add. */
+  headerOrder?: string[];
+  /** Server-filled: whether the sendBeacon request actually arrived. */
+  beaconSeen?: boolean;
 }
 
 export function collectProbe(): Probe {
@@ -128,6 +136,7 @@ function features(w: Record<string, unknown>, nav: Record<string, unknown>): Rec
       return false;
     }
   };
+  const fn = (v: unknown) => typeof v === 'function';
   return {
     'navigator.oscpu': has(() => nav.oscpu),
     'navigator.buildID': has(() => nav.buildID),
@@ -138,10 +147,23 @@ function features(w: Record<string, unknown>, nav: Record<string, unknown>): Rec
     'window.mozInnerScreenX': has(() => w.mozInnerScreenX),
     'window.chrome': has(() => w.chrome),
     'CSS.highlights': has(() => (w.CSS as { highlights?: unknown })?.highlights),
-    'Array.fromAsync': typeof (Array as unknown as { fromAsync?: unknown }).fromAsync === 'function',
-    'Promise.withResolvers': typeof (Promise as unknown as { withResolvers?: unknown }).withResolvers === 'function',
-    OffscreenCanvas: typeof (w.OffscreenCanvas as unknown) === 'function',
+    'Array.fromAsync': fn((Array as unknown as { fromAsync?: unknown }).fromAsync),
+    'Promise.withResolvers': fn((Promise as unknown as { withResolvers?: unknown }).withResolvers),
+    OffscreenCanvas: fn(w.OffscreenCanvas),
     'window.PdfJS': has(() => w.PdfJS),
+    // Experimental / pref-gated frontier APIs — a fork that flips flags diverges here.
+    'navigator.gpu (WebGPU)': has(() => nav.gpu),
+    'document.startViewTransition': fn((w.document as { startViewTransition?: unknown })?.startViewTransition),
+    'window.CloseWatcher': fn(w.CloseWatcher),
+    'CSS.registerProperty': fn((w.CSS as { registerProperty?: unknown })?.registerProperty),
+    'Intl.DurationFormat': has(() => (Intl as unknown as { DurationFormat?: unknown }).DurationFormat),
+    'Object.groupBy': fn((Object as unknown as { groupBy?: unknown }).groupBy),
+    'Iterator.prototype.map': fn((w.Iterator as { prototype?: { map?: unknown } })?.prototype?.map),
+    'Uint8Array.fromBase64': fn((w.Uint8Array as { fromBase64?: unknown })?.fromBase64),
+    Float16Array: has(() => w.Float16Array),
+    'window.Notification': has(() => w.Notification),
+    'navigator.scheduling': has(() => nav.scheduling),
+    'navigator.serviceWorker': has(() => nav.serviceWorker),
   };
 }
 
@@ -162,6 +184,17 @@ function cssProbes(): Record<string, boolean> {
     'scrollbar-width:thin': s('scrollbar-width', 'thin'),
     'text-wrap:balance': s('text-wrap', 'balance'),
     'color:light-dark(#000,#fff)': s('color', 'light-dark(#000,#fff)'),
+    // Experimental / pref-gated CSS — likely diff points between Zen and stock Firefox.
+    'animation-timeline:scroll()': s('animation-timeline', 'scroll()'),
+    'view-transition-name:none': s('view-transition-name', 'none'),
+    'text-box-trim:trim-both': s('text-box-trim', 'trim-both'),
+    'interpolate-size:allow-keywords': s('interpolate-size', 'allow-keywords'),
+    'reading-flow:grid-rows': s('reading-flow', 'grid-rows'),
+    'color:contrast-color(red)': s('color', 'contrast-color(red)'),
+    'clip-path:shape(from 0 0)': s('clip-path', 'shape(from 0 0)'),
+    'position-area:top': s('position-area', 'top'),
+    'scrollbar-color:auto': s('scrollbar-color', 'auto'),
+    'masonry:block': s('grid-template-rows', 'masonry'),
   };
 }
 
@@ -197,6 +230,8 @@ export interface ProbeDiff {
   cssChanged: DiffEntry[];
   mediaChanged: DiffEntry[];
   geometryChanged: DiffEntry[];
+  headersChanged: DiffEntry[];
+  behaviorChanged: DiffEntry[];
 }
 
 export interface DiffEntry {
@@ -209,6 +244,11 @@ export interface DiffEntry {
 export function diffProbes(baseline: Probe, current: Probe): ProbeDiff {
   const bSet = new Set(baseline.globals);
   const cSet = new Set(current.globals);
+  const behavior = (p: Probe) => ({
+    beaconReturned: p.beaconReturned ?? '∅',
+    beaconSeen: p.beaconSeen ?? '∅',
+    headerOrder: (p.headerOrder ?? []).join(' '),
+  });
   return {
     globalsOnlyInBaseline: baseline.globals.filter((k) => !cSet.has(k)),
     globalsOnlyInCurrent: current.globals.filter((k) => !bSet.has(k)),
@@ -219,6 +259,8 @@ export function diffProbes(baseline: Probe, current: Probe): ProbeDiff {
     cssChanged: diffRecord(baseline.css, current.css),
     mediaChanged: diffRecord(baseline.media, current.media),
     geometryChanged: diffRecord(baseline.geometry, current.geometry),
+    headersChanged: diffRecord(baseline.requestHeaders ?? {}, current.requestHeaders ?? {}),
+    behaviorChanged: diffRecord(behavior(baseline), behavior(current)),
   };
 }
 

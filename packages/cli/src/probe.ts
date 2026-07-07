@@ -32,8 +32,21 @@ export async function probe(opts: ProbeOptions): Promise<void> {
   const clientJs = await buildProbeClient();
   const outFile = resolve(process.cwd(), `abd-probe-${opts.label}.json`);
 
+  // Captured server-side from the navigation request (zero JS, hard to spoof).
+  let navHeaders: Record<string, string> = {};
+  let headerOrder: string[] = [];
+  let beaconSeen = false;
+
   const server = createServer((req, res) => {
     if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
+      // Record the real request headers in wire order.
+      headerOrder = [];
+      navHeaders = {};
+      for (let i = 0; i < req.rawHeaders.length; i += 2) {
+        const name = req.rawHeaders[i]!.toLowerCase();
+        headerOrder.push(name);
+        navHeaders[name] = req.rawHeaders[i + 1] ?? '';
+      }
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       res.end(pageHtml(opts.label));
       return;
@@ -43,12 +56,21 @@ export async function probe(opts: ProbeOptions): Promise<void> {
       res.end(clientJs);
       return;
     }
+    if (req.url === '/beacon-probe') {
+      beaconSeen = true;
+      res.writeHead(204);
+      res.end();
+      return;
+    }
     if (req.method === 'POST' && req.url === '/probe') {
       let body = '';
       req.on('data', (c) => (body += c));
       req.on('end', () => {
         try {
           const p = JSON.parse(body) as Probe;
+          p.requestHeaders = navHeaders;
+          p.headerOrder = headerOrder;
+          p.beaconSeen = beaconSeen;
           writeFileSync(outFile, JSON.stringify(p, null, 2) + '\n');
           res.writeHead(200, { 'content-type': 'application/json' });
           res.end('{"ok":true}');
@@ -90,6 +112,14 @@ function report(p: Probe, outFile: string, opts: ProbeOptions): void {
     for (const k of varKeys.slice(0, 40)) process.stdout.write(`    ${cyan(k)} = ${vars[k]}\n`);
   }
 
+  // Notable request headers + behaviour (pref-constellation tells).
+  const h = p.requestHeaders ?? {};
+  const notable = ['sec-gpc', 'dnt', 'accept', 'accept-language', 'accept-encoding', 'priority', 'upgrade-insecure-requests'];
+  process.stdout.write(`\n  ${bold('Request headers / behaviour:')}\n`);
+  for (const k of notable) if (h[k] != null) process.stdout.write(`    ${cyan(k)}: ${h[k]}\n`);
+  process.stdout.write(`    ${cyan('header order')}: ${(p.headerOrder ?? []).join(' ')}\n`);
+  process.stdout.write(`    ${cyan('sendBeacon')}: returned=${p.beaconReturned} arrived=${p.beaconSeen}\n`);
+
   if (!opts.compare) {
     process.stdout.write(
       `\n  ${dim(`Tip: capture a stock Firefox baseline, then run:`)}\n` +
@@ -115,6 +145,8 @@ function report(p: Probe, outFile: string, opts: ProbeOptions): void {
   printList('JS features changed', d.featureChanged);
   printList('CSS support changed', d.cssChanged);
   printList('media queries changed', d.mediaChanged);
+  printList('request headers changed', d.headersChanged);
+  printList('behaviour changed (beacon/header order)', d.behaviorChanged);
   printList('chrome geometry changed', d.geometryChanged);
 
   const total =
@@ -124,7 +156,9 @@ function report(p: Probe, outFile: string, opts: ProbeOptions): void {
     d.bodyVarsChanged.length +
     d.featureChanged.length +
     d.cssChanged.length +
-    d.mediaChanged.length;
+    d.mediaChanged.length +
+    d.headersChanged.length +
+    d.behaviorChanged.length;
   process.stdout.write(
     `\n  ${total === 0 ? dim('No structural differences found — no web-content signature in this probe set.') : green(`${total} candidate difference(s) — any stable one can become a signature.`)}\n\n`,
   );

@@ -7,6 +7,13 @@ async function main() {
   try {
     status.textContent = 'Collecting expanded probe…';
     const probe = collectProbe();
+    // Behavioural probe: does sendBeacon work? (beacon.enabled off ⇒ returns false / never arrives)
+    try {
+      probe.beaconReturned = navigator.sendBeacon('/beacon-probe', 'abd');
+    } catch {
+      probe.beaconReturned = false;
+    }
+    await new Promise((r) => setTimeout(r, 300)); // let the beacon reach the server first
     await fetch('/probe', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
