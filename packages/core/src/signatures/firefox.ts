@@ -1,5 +1,5 @@
 import type { Signature } from '../types.js';
-import { rfpEvidence, uaHas } from './util.js';
+import { isGecko, rfpEvidence, uaHas } from './util.js';
 
 /**
  * Gecko-family signatures.
@@ -62,11 +62,20 @@ export const firefoxSignatures: Signature[] = [
     name: 'Zen Browser',
     engine: 'Gecko',
     evaluate: (s) => {
-      // Zen ships Firefox's UA and does not alter navigator, so by default it is
-      // web-indistinguishable from Firefox. We only fire on an explicit token,
-      // which some custom Zen builds add. This is a deliberate stub — see notes.
-      if (uaHas(s, /\bZen\//)) return [{ signal: 'UA token Zen/ (custom build)', weight: 3 }];
-      return [];
+      // Empirically (see `abd probe`), stock Zen injects NO global and NO CSS
+      // variable into web content and freezes buildID like Firefox — so there is
+      // no definitive marker. What it *does* change are two defaults, captured
+      // here as heuristics. Deliberately kept below the Firefox base score so we
+      // never over-claim: Zen shows up as a strong candidate, not a false verdict.
+      const ev = [];
+      if (uaHas(s, /\bZen\//)) ev.push({ signal: 'UA token Zen/ (custom build)', weight: 3 });
+      if (isGecko(s)) {
+        if (s.globalPrivacyControl === true)
+          ev.push({ signal: 'Global Privacy Control on by default (Zen default; stock Firefox is off)', weight: 1 });
+        if ((s.chromeWidth ?? 0) >= 120)
+          ev.push({ signal: `~${s.chromeWidth}px horizontal chrome ⇒ vertical-tab sidebar (Zen layout)`, weight: 1 });
+      }
+      return ev;
     },
   },
   {

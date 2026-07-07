@@ -46,6 +46,14 @@ export function detect(signals: Signals): DetectionResult {
 
   addContextNotes(notes, signals, browser, claimedByUA.name, engine, spoofed);
 
+  // Surface a heuristic Zen match even when Firefox legitimately wins the score.
+  const zen = scored.find((c) => c.name === 'Zen Browser');
+  if (zen && browser.name !== 'Zen Browser') {
+    notes.push(
+      `Possible Zen Browser: ${zen.evidence.map((e) => e.signal).join('; ')}. These are Zen defaults, not a unique marker, so it still reports as ${browser.name}.`,
+    );
+  }
+
   return {
     browser,
     engine,

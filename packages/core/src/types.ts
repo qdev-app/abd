@@ -58,6 +58,15 @@ export interface Signals {
   /** CSS.supports() probes, e.g. { '-moz-appearance:none': true }. */
   css: Record<string, boolean>;
 
+  /** navigator.globalPrivacyControl — Zen enables this by default; stock Firefox is off. */
+  globalPrivacyControl?: boolean;
+
+  /** window.outerWidth - innerWidth. A large value ⇒ a vertical sidebar (Zen's layout). */
+  chromeWidth?: number;
+
+  /** window.outerHeight - innerHeight. */
+  chromeHeight?: number;
+
   /** Intl timezone — RFP forces "UTC". */
   timezone?: string;
 

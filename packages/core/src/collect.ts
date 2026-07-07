@@ -27,6 +27,12 @@ export async function collectSignals(): Promise<Signals> {
     deviceMemory: safe(() => (nav as unknown as { deviceMemory?: number }).deviceMemory, undefined),
     maxTouchPoints: safe(() => nav.maxTouchPoints, undefined),
     pdfViewerEnabled: safe(() => (nav as unknown as { pdfViewerEnabled?: boolean }).pdfViewerEnabled, undefined),
+    globalPrivacyControl: safe(
+      () => (nav as unknown as { globalPrivacyControl?: boolean }).globalPrivacyControl,
+      undefined,
+    ),
+    chromeWidth: safe(() => window.outerWidth - window.innerWidth, undefined),
+    chromeHeight: safe(() => window.outerHeight - window.innerHeight, undefined),
     brave,
     globals: collectGlobals(win, nav),
     features: collectFeatures(),

@@ -60,6 +60,19 @@ const fixtures = {
     // Tor, does not round the reported window to 200x100 steps.
     screen: { width: 1536, height: 864, pixelRatio: 1.25, colorDepth: 24 },
   },
+  'Zen (GPC + vertical-sidebar heuristic)': {
+    ...base,
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
+    oscpu: 'Intel Mac OS X 10.15',
+    productSub: '20100101',
+    css: { '-moz-appearance:none': true },
+    globals: { MozAppearance: true },
+    timezone: 'Europe/Berlin',
+    hardwareConcurrency: 15,
+    globalPrivacyControl: true, // Zen default; stock Firefox is off
+    chromeWidth: 244, // vertical-tab sidebar
+    chromeHeight: 112,
+  },
   'Tor Browser (letterboxed + full RFP)': {
     ...base,
     userAgent: ffUA,
@@ -95,6 +108,11 @@ asrt(detect(fixtures['Arc (claims Chrome, CSS var exposes it)']).browser.name ==
 asrt(detect(fixtures['Stock Firefox (live, no fork markers)']).browser.name === 'Mozilla Firefox', 'Firefox not detected');
 asrt(detect(fixtures['LibreWolf-ish Firefox with RFP (claims Firefox)']).browser.name === 'LibreWolf', 'LibreWolf not detected');
 asrt(detect(fixtures['Tor Browser (letterboxed + full RFP)']).browser.name === 'Tor Browser', 'Tor not detected');
+// Zen heuristic: Firefox stays top (honest), but Zen surfaces as a candidate + note.
+const zenR = detect(fixtures['Zen (GPC + vertical-sidebar heuristic)']);
+asrt(zenR.browser.name === 'Mozilla Firefox', 'Zen heuristic should not override Firefox as top pick');
+asrt(zenR.candidates.some((c) => c.name === 'Zen Browser'), 'Zen should appear as a candidate');
+asrt(zenR.notes.some((n) => n.includes('Possible Zen')), 'Zen possibility note should be present');
 
 // --- Install target resolution ---
 console.log('\n=== resolveInstallTargets ===');

@@ -4,6 +4,17 @@ export function uaHas(s: Signals, re: RegExp): boolean {
   return re.test(s.userAgent || '');
 }
 
+/** True when live signals (or the UA) indicate the Gecko engine. */
+export function isGecko(s: Signals): boolean {
+  return (
+    s.oscpu != null ||
+    s.productSub === '20100101' ||
+    s.css['-moz-appearance:none'] === true ||
+    s.globals['MozAppearance'] === true ||
+    /\bGecko\/\d|\bFirefox\//.test(s.userAgent || '')
+  );
+}
+
 export function brandHas(s: Signals, name: string): boolean {
   return !!s.uaData?.brands.some((b) => b.brand.toLowerCase().includes(name.toLowerCase()));
 }
