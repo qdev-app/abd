@@ -41,6 +41,12 @@ export async function serve(opts: ServeOptions): Promise<void> {
         try {
           const signals = JSON.parse(body) as Signals;
           const result = detect(signals);
+          if (process.env.ABD_DEBUG) {
+            const g = signals as unknown as Record<string, unknown>;
+            process.stderr.write(
+              `[debug] L=${g.chromeLeft} R=${g.chromeRight} T=${g.chromeTop} B=${g.chromeBottom} gpc=${g.globalPrivacyControl} → ${result.browser.name}\n`,
+            );
+          }
           res.writeHead(200, { 'content-type': 'application/json' });
           res.end(JSON.stringify(result));
 
