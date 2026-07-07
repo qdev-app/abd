@@ -1,0 +1,35 @@
+name: Publish @qdev-app/abd-core
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags: ['core-v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build the engine
+        run: bun run --filter '@qdev-app/abd-core' build
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      # dist is already built above, so skip the prepublishOnly rebuild.
+      - name: Publish to npm
+        working-directory: packages/core
+        run: npm publish --access public --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
