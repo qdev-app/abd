@@ -71,27 +71,34 @@ export const firefoxSignatures: Signature[] = [
       if (uaHas(s, /\bZen\//)) ev.push({ signal: 'UA token Zen/ (custom build)', weight: 5 });
       if (isGecko(s)) {
         const gpc = s.globalPrivacyControl === true;
-        // Prefer the decomposed left inset (a LEFT sidebar specifically) over the
-        // raw chromeWidth when Gecko exposed mozInnerScreenX.
+        const haveInsets = s.chromeLeft != null;
         const sidebarW = s.chromeLeft ?? s.chromeWidth ?? 0;
-        const sidebar = sidebarW >= 120;
         const leftSidebar = (s.chromeLeft ?? 0) >= 120 && (s.chromeRight ?? 99) <= 40;
-        const tallChrome = (s.chromeTop ?? s.chromeHeight ?? 0) >= 95;
+        // Empirically, Zen's chrome is THICK — a tall top toolbar (~72px) plus a
+        // bottom bar (~40px) — whereas Firefox's native vertical tabs is THIN
+        // (top ~40px, no bottom bar). This is what separates the two sidebars.
+        const zenChrome = (s.chromeBottom ?? 0) >= 20 || (s.chromeTop ?? 0) >= 60 || (s.chromeHeight ?? 0) >= 90;
+
         if (gpc)
           ev.push({ signal: 'Global Privacy Control on by default (Zen default; stock Firefox is off)', weight: 1 });
-        if (sidebar)
+
+        if (leftSidebar && zenChrome) {
           ev.push({
-            signal: `~${sidebarW}px ${leftSidebar ? 'left ' : ''}vertical-tab sidebar (stock Firefox is 0)`,
+            signal: `~${sidebarW}px left sidebar with thick chrome (top ${s.chromeTop ?? '?'}px, bottom ${s.chromeBottom ?? '?'}px) — Zen's layout, not Firefox's thin vertical tabs`,
             weight: 1.5,
           });
-        if (sidebar && tallChrome)
-          ev.push({ signal: `~${s.chromeTop ?? s.chromeHeight}px top chrome consistent with Zen's toolbar`, weight: 0.5 });
-        // Constellation bonus: an empirical Zen-vs-Firefox diff showed GPC + a
-        // vertical sidebar are stock Firefox's two clearest differences from Zen.
-        // Together (not alone) they outweigh the Firefox base score, so Zen wins
-        // only when the whole constellation is present.
-        if (gpc && sidebar)
-          ev.push({ signal: 'GPC + vertical-sidebar constellation (matches Zen defaults, not stock Firefox)', weight: 2 });
+          // Constellation bonus only when GPC accompanies the Zen-profile sidebar.
+          if (gpc)
+            ev.push({ signal: 'GPC + Zen-profile sidebar constellation (matches Zen, excludes Firefox vertical tabs)', weight: 2 });
+        } else if (!haveInsets && sidebarW >= 120) {
+          // No decomposed insets ⇒ can't separate Zen from Firefox vertical tabs.
+          ev.push({
+            signal: `~${sidebarW}px vertical sidebar (can't separate Zen from Firefox vertical tabs without chrome insets)`,
+            weight: 0.75,
+          });
+        }
+        // A sidebar with THIN chrome is Firefox's vertical tabs — deliberately no
+        // Zen credit, which removes the main false positive.
       }
       return ev;
     },

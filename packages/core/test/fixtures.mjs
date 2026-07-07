@@ -60,7 +60,7 @@ const fixtures = {
     // Tor, does not round the reported window to 200x100 steps.
     screen: { width: 1536, height: 864, pixelRatio: 1.25, colorDepth: 24 },
   },
-  'Zen (GPC + vertical-sidebar constellation)': {
+  'Zen (GPC + Zen-profile sidebar)': {
     ...base,
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
     oscpu: 'Intel Mac OS X 10.15',
@@ -70,8 +70,29 @@ const fixtures = {
     timezone: 'Europe/Berlin',
     hardwareConcurrency: 15,
     globalPrivacyControl: true, // Zen default; stock Firefox is off
-    chromeWidth: 244, // vertical-tab sidebar (stock Firefox is 0)
+    // Real Zen geometry: left sidebar + THICK chrome (tall top + bottom bar).
+    chromeLeft: 269,
+    chromeRight: 8,
+    chromeTop: 72,
+    chromeBottom: 40,
+    chromeWidth: 277,
     chromeHeight: 112,
+  },
+  'Firefox with vertical tabs + GPC (must NOT be Zen)': {
+    ...base,
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
+    oscpu: 'Intel Mac OS X 10.15',
+    productSub: '20100101',
+    css: { '-moz-appearance:none': true },
+    globals: { MozAppearance: true },
+    globalPrivacyControl: true, // even with GPC on…
+    // Real Firefox-VT geometry: left sidebar but THIN chrome (top 40, no bottom bar).
+    chromeLeft: 218,
+    chromeRight: 0,
+    chromeTop: 40,
+    chromeBottom: 0,
+    chromeWidth: 218,
+    chromeHeight: 40,
   },
   'Firefox with GPC only (no sidebar)': {
     ...base,
@@ -81,7 +102,11 @@ const fixtures = {
     css: { '-moz-appearance:none': true },
     globals: { MozAppearance: true },
     globalPrivacyControl: true,
-    chromeWidth: 0, // no vertical sidebar
+    chromeLeft: 0,
+    chromeRight: 0,
+    chromeTop: 84,
+    chromeBottom: 0,
+    chromeWidth: 0,
     chromeHeight: 84,
   },
   'Tor Browser (letterboxed + full RFP)': {
@@ -134,15 +159,19 @@ asrt(detect(fixtures['Arc (claims Chrome, CSS var exposes it)']).browser.name ==
 asrt(detect(fixtures['Stock Firefox (live, no fork markers)']).browser.name === 'Mozilla Firefox', 'Firefox not detected');
 asrt(detect(fixtures['LibreWolf-ish Firefox with RFP (claims Firefox)']).browser.name === 'LibreWolf', 'LibreWolf not detected');
 asrt(detect(fixtures['Tor Browser (letterboxed + full RFP)']).browser.name === 'Tor Browser', 'Tor not detected');
-// Zen constellation (GPC + sidebar) → Zen becomes the top pick, with a caveat note.
-const zenR = detect(fixtures['Zen (GPC + vertical-sidebar constellation)']);
-console.log('  Zen constellation → top:', zenR.browser.name, '| candidates:', zenR.candidates.map((c) => c.name).join(', '));
-asrt(zenR.browser.name === 'Zen Browser', 'GPC + sidebar constellation should make Zen the top pick');
+// Zen constellation (GPC + Zen-profile thick-chrome sidebar) → Zen tops, with a caveat note.
+const zenR = detect(fixtures['Zen (GPC + Zen-profile sidebar)']);
+console.log('  Zen → top:', zenR.browser.name, '| candidates:', zenR.candidates.map((c) => c.name).join(', '));
+asrt(zenR.browser.name === 'Zen Browser', 'GPC + Zen-profile sidebar should make Zen the top pick');
 asrt(zenR.notes.some((n) => n.includes('heuristic')), 'Zen heuristic caveat note should be present');
-// GPC alone (no sidebar) is too weak → Firefox stays top, Zen is only a candidate.
+// Firefox with native vertical tabs (thin chrome) + GPC must NOT read as Zen.
+const ffvt = detect(fixtures['Firefox with vertical tabs + GPC (must NOT be Zen)']);
+console.log('  Firefox-VT → top:', ffvt.browser.name, '| candidates:', ffvt.candidates.map((c) => c.name).join(', '));
+asrt(ffvt.browser.name === 'Mozilla Firefox', 'Firefox vertical tabs (thin chrome) must NOT be classified as Zen');
+asrt(!ffvt.browser.evidence.some((e) => /left sidebar/.test(e.signal)), 'Firefox-VT should not get Zen sidebar credit');
+// GPC alone (no sidebar) is too weak → Firefox stays top.
 const gpcOnly = detect(fixtures['Firefox with GPC only (no sidebar)']);
 asrt(gpcOnly.browser.name === 'Mozilla Firefox', 'GPC alone should NOT override Firefox');
-asrt(gpcOnly.candidates.some((c) => c.name === 'Zen Browser'), 'Zen should still surface as a candidate on GPC alone');
 
 // --- Version-consistency spoof detection + engine cross-confirmation ---
 console.log('\n=== version consistency ===');
