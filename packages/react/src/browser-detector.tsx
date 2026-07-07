@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { collectSignals, detect, type DetectionResult } from '@qdev-app/abd-core';
+import type { DetectionResult } from '@qdev-app/abd-core';
+import { useBrowserDetection } from './use-browser-detection.js';
 
 export interface BrowserDetectorProps {
   /** Called once detection completes. */
@@ -11,36 +12,17 @@ export interface BrowserDetectorProps {
   className?: string;
 }
 
-type State = { status: 'loading' } | { status: 'ready'; result: DetectionResult } | { status: 'error'; message: string };
-
 /**
  * Drop-in widget that identifies the *real* browser it is running in — including
  * ones that spoof or share a User-Agent (Brave/Arc as Chrome, Firefox forks) —
  * by reading live behavioural signals, not just the UA string.
- *
- * Distributed via the shadcn registry:
- *   npx shadcn@latest add https://<your-host>/r/browser-detector.json
  */
 export function BrowserDetector({ onResult, className }: BrowserDetectorProps) {
-  const [state, setState] = React.useState<State>({ status: 'loading' });
+  const state = useBrowserDetection();
 
   React.useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const signals = await collectSignals();
-        const result = detect(signals);
-        if (cancelled) return;
-        setState({ status: 'ready', result });
-        onResult?.(result);
-      } catch (err) {
-        if (!cancelled) setState({ status: 'error', message: err instanceof Error ? err.message : String(err) });
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [onResult]);
+    if (state.status === 'ready') onResult?.(state.result);
+  }, [state, onResult]);
 
   return (
     <div
@@ -55,13 +37,11 @@ export function BrowserDetector({ onResult, className }: BrowserDetectorProps) {
             <Spinner /> Reading live browser signals…
           </motion.div>
         )}
-
         {state.status === 'error' && (
           <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-6 text-sm text-red-500">
-            Detection failed: {state.message}
+            Detection failed: {state.error}
           </motion.div>
         )}
-
         {state.status === 'ready' && <Result key="ready" result={state.result} />}
       </AnimatePresence>
     </div>
@@ -71,12 +51,7 @@ export function BrowserDetector({ onResult, className }: BrowserDetectorProps) {
 function Result({ result }: { result: DetectionResult }) {
   const confidence = Math.round(result.browser.confidence * 100);
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ type: 'spring', stiffness: 260, damping: 24 }}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-neutral-400">You are using</p>
@@ -116,19 +91,10 @@ function Result({ result }: { result: DetectionResult }) {
       </dl>
 
       {result.browser.evidence.length > 0 && (
-        <motion.ul
-          className="mt-5 space-y-1.5"
-          initial="hidden"
-          animate="show"
-          variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.2 } } }}
-        >
+        <motion.ul className="mt-5 space-y-1.5" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.2 } } }}>
           <p className="text-xs font-medium uppercase tracking-wider text-neutral-400">Evidence</p>
           {result.browser.evidence.map((e, i) => (
-            <motion.li
-              key={i}
-              variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0 } }}
-              className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300"
-            >
+            <motion.li key={i} variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0 } }} className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300">
               <span className="text-emerald-500">✓</span>
               <span>{e.signal}</span>
             </motion.li>
@@ -153,10 +119,7 @@ function SpoofBadge({ spoofed }: { spoofed: boolean }) {
       initial={{ scale: 0.6, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.1 }}
-      className={
-        'shrink-0 rounded-full px-3 py-1 text-xs font-semibold ' +
-        (spoofed ? 'bg-red-500/15 text-red-600 dark:text-red-400' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400')
-      }
+      className={'shrink-0 rounded-full px-3 py-1 text-xs font-semibold ' + (spoofed ? 'bg-red-500/15 text-red-600 dark:text-red-400' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400')}
     >
       {spoofed ? '⚠ UA mismatch' : '✓ consistent'}
     </motion.span>
@@ -173,13 +136,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 function Spinner() {
-  return (
-    <motion.span
-      className="inline-block h-4 w-4 rounded-full border-2 border-neutral-300 border-t-indigo-500"
-      animate={{ rotate: 360 }}
-      transition={{ repeat: Infinity, ease: 'linear', duration: 0.8 }}
-    />
-  );
+  return <motion.span className="inline-block h-4 w-4 rounded-full border-2 border-neutral-300 border-t-indigo-500" animate={{ rotate: 360 }} transition={{ repeat: Infinity, ease: 'linear', duration: 0.8 }} />;
 }
 
 export default BrowserDetector;

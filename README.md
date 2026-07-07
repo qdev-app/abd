@@ -5,9 +5,9 @@ Identify the **real** browser behind a spoofed or shared User-Agent.
 A User-Agent string is trivially faked, and whole families of browsers deliberately reuse another browser's UA: **Brave** and **Arc** ship Chrome's UA, **Zen / Floorp / Mullvad** ship Firefox's UA, and privacy builds (**LibreWolf**, **Tor Browser**) blend in on purpose. `abd` compares the UA's *claim* against **live behavioural signals** that a page can't easily fake — `userAgentData.brands`, `navigator.brave.isBrave()`, Gecko-only `navigator.oscpu`, Arc's injected CSS variable, resist-fingerprinting tells — and flags the mismatches.
 
 - 🧠 **`@qdev-app/abd-core`** — a pure-TS detection engine (signals → ranked candidates + engine + spoof verdict)
+- ⚛️ **`@qdev-app/abd-react`** — React components + `useBrowserDetection()` hook
 - 🖥️ **`@abd/cli`** — `abd serve` captures a live signature from any browser you point at it; `abd "<ua>"` parses a UA offline
-- 🌐 **web app** — React + Tailwind + Motion page that detects *your* browser
-- 📦 **shadcn registry** — drop the detector into any React app: `npx shadcn add …/r/browser-detector.json`
+- 🌐 **hosted UI + API** — live demo and a metered detection API at **[abd.qdev.app](https://abd.qdev.app)**
 
 > **Honest by design.** A fork that only restyles the browser *chrome* (e.g. stock **Zen**) leaves `navigator` untouched and is genuinely **indistinguishable from Firefox** to web content. `abd` never pretends otherwise — it reports what the signals actually support, with confidence and caveats, and the signature registry is built to grow as new tells are found.
 
@@ -58,44 +58,31 @@ bun run tls            # builds, then runs the HTTPS server on :4443 under Node
 
 It peeks the raw ClientHello, computes **JA4** (and JA3), then terminates TLS normally so the page still loads. Look the JA4 up in a database like [ja4db.com](https://ja4db.com) to map it to a client. (Runs under Node, not bun — bun's server-side TLS wrapping is incomplete; the `bun run tls` script handles that for you. Needs `openssl` on PATH for a throwaway dev cert.) Note: it won't separate same-engine forks — Zen and Firefox share Gecko's TLS stack.
 
-### Web app
+### React components — `@qdev-app/abd-react`
 
 ```bash
-bun run dev:web   # http://localhost:5173
+npm i @qdev-app/abd-react @qdev-app/abd-core motion react
 ```
 
-### shadcn components
-
-The web app hosts a [shadcn registry](https://ui.shadcn.com/docs/registry) with two items. After deploying it, add them to any React app:
-
-```bash
-npx shadcn@latest add https://<your-deployed-host>/r/browser-detector.json
-npx shadcn@latest add https://<your-deployed-host>/r/install-duo.json
-```
-
-**`browser-detector`** — full detection card:
+**Hook** — own your own UI:
 
 ```tsx
-import { BrowserDetector } from '@/components/browser-detector';
+import { useBrowserDetection } from '@qdev-app/abd-react';
 
-<BrowserDetector onResult={(r) => console.log(r.browser.name, r.spoofed)} />;
+const { status, result } = useBrowserDetection();
+// status === 'ready' ⇒ result.browser.name, result.spoofed, …
 ```
 
-**`install-duo`** — two live-detected install buttons: a **primary** for the visitor's browser and a **secondary** for the mainstream browser of its engine (Chrome for Blink, Firefox for Gecko, Safari for WebKit). A button appears **only when you supply a link for it**, so a Zen visitor with just a Firefox link sees a single Firefox button:
+**`<BrowserDetector />`** — full animated detection card. **`<InstallDuo />`** — two live-detected install buttons (visitor's browser + its engine's mainstream browser); a button appears **only when you supply a link for it**, so a Zen visitor with just a Firefox link sees one Firefox button:
 
 ```tsx
-import { InstallDuo } from '@/components/install-duo';
+import { BrowserDetector, InstallDuo } from '@qdev-app/abd-react';
 
-<InstallDuo
-  links={{
-    chrome: 'https://chromewebstore.google.com/…',
-    firefox: 'https://addons.mozilla.org/…',
-    // no Zen link needed — Gecko visitors fall back to the Firefox button
-  }}
-/>;
+<BrowserDetector onResult={(r) => console.log(r.browser.name, r.spoofed)} />
+<InstallDuo links={{ chrome: '…', firefox: '…' }} />
 ```
 
-Regenerate the registry JSON after editing a component: `bun run registry`.
+The hosted demo of these lives at **[abd.qdev.app](https://abd.qdev.app)**.
 
 ## Supported browsers
 
@@ -174,10 +161,12 @@ Signatures are small `evaluate(signals) → Evidence[]` functions in `packages/c
 ## Layout
 
 ```
-packages/core   detection engine + browser signal collector (framework-free)
-packages/cli    `abd` command — serve mode + UA parsing
-apps/web        React/Tailwind/Motion site + shadcn registry (public/r/*.json)
+packages/core   @qdev-app/abd-core  — detection engine + signal collector (framework-free)
+packages/react  @qdev-app/abd-react — React components + useBrowserDetection() hook
+packages/cli    @abd/cli            — `abd` command: serve / probe / tls / UA parsing
 ```
+
+The hosted web UI and metered API live in the separate private `abd-cloud` repo (deployed to abd.qdev.app).
 
 ## License
 

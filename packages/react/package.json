@@ -1,0 +1,40 @@
+{
+  "name": "@qdev-app/abd-react",
+  "version": "0.1.0",
+  "description": "React components + hook for the Advanced Browser Detector — show the real browser behind a spoofed UA",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src", "README.md"],
+  "sideEffects": false,
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/qdev-app/abd.git", "directory": "packages/react" },
+  "homepage": "https://github.com/qdev-app/abd#readme",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@qdev-app/abd-core": "^0.1.0"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "motion": ">=11"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "motion": "^11.11.17",
+    "react": "^18.3.1",
+    "typescript": "^5.6.3"
+  },
+  "keywords": ["browser-detection", "react", "hook", "zen", "brave"]
+}

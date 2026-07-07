@@ -1,4 +1,4 @@
-name: Publish @qdev-app/abd-core
+name: Publish npm packages
 
 on:
   workflow_dispatch: {}
@@ -19,8 +19,8 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Build the engine
-        run: bun run --filter '@qdev-app/abd-core' build
+      - name: Build packages
+        run: bun run build
 
       - uses: actions/setup-node@v4
         with:
@@ -28,8 +28,15 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       # dist is already built above, so skip the prepublishOnly rebuild.
-      - name: Publish to npm
+      # `|| true` lets a re-run skip versions already on npm without failing.
+      - name: Publish @qdev-app/abd-core
         working-directory: packages/core
-        run: npm publish --access public --ignore-scripts
+        run: npm publish --access public --ignore-scripts || true
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @qdev-app/abd-react
+        working-directory: packages/react
+        run: npm publish --access public --ignore-scripts || true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
