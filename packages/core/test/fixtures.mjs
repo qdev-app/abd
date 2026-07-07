@@ -78,7 +78,7 @@ const fixtures = {
     chromeWidth: 277,
     chromeHeight: 112,
   },
-  'Zen (sidebar hidden — bottom bar survives)': {
+  'Zen (sidebar hidden — no tell but GPC, honest floor)': {
     ...base,
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
     oscpu: 'Intel Mac OS X 10.15',
@@ -86,13 +86,14 @@ const fixtures = {
     css: { '-moz-appearance:none': true },
     globals: { MozAppearance: true },
     globalPrivacyControl: true,
-    // Sidebar hidden: no left inset, but Zen's bottom bar persists (~32px).
+    // Sidebar hidden: Zen drops the bottom chrome too, so it's geometrically
+    // identical to stock Firefox. Only GPC remains → NOT reliably Zen.
     chromeLeft: 0,
     chromeRight: 0,
     chromeTop: 72,
-    chromeBottom: 32,
+    chromeBottom: 0,
     chromeWidth: 0,
-    chromeHeight: 104,
+    chromeHeight: 72,
   },
   'Firefox with vertical tabs + GPC (must NOT be Zen)': {
     ...base,
@@ -197,10 +198,11 @@ const zenR = detect(fixtures['Zen (GPC + Zen-profile sidebar)']);
 console.log('  Zen (sidebar shown) → top:', zenR.browser.name);
 asrt(zenR.browser.name === 'Zen Browser', 'Zen with sidebar should be the top pick');
 asrt(zenR.notes.some((n) => n.includes('heuristic')), 'Zen heuristic caveat note should be present');
-// Zen with sidebar HIDDEN → still detected via the persistent bottom bar.
-const zenHidden = detect(fixtures['Zen (sidebar hidden — bottom bar survives)']);
-console.log('  Zen (sidebar hidden) → top:', zenHidden.browser.name, '| evidence:', zenHidden.browser.evidence.map((e) => e.signal.slice(0, 24)).join(' | '));
-asrt(zenHidden.browser.name === 'Zen Browser', 'Zen with sidebar hidden should STILL be detected (bottom bar)');
+// Zen with sidebar HIDDEN → geometrically identical to Firefox (no bottom chrome),
+// so only GPC remains and it is NOT reliably Zen. This is the honest floor.
+const zenHidden = detect(fixtures['Zen (sidebar hidden — no tell but GPC, honest floor)']);
+console.log('  Zen (sidebar hidden) → top:', zenHidden.browser.name, '(expected Firefox — floor)');
+asrt(zenHidden.browser.name === 'Mozilla Firefox', 'Zen with sidebar hidden is indistinguishable from Firefox (only GPC)');
 // Firefox vertical tabs + GPC must NOT read as Zen (no bottom bar).
 const ffvt = detect(fixtures['Firefox with vertical tabs + GPC (must NOT be Zen)']);
 console.log('  Firefox-VT → top:', ffvt.browser.name);
