@@ -57,9 +57,14 @@ export function detect(signals: Signals): DetectionResult {
 
   addContextNotes(notes, signals, browser, claimedByUA.name, engine, spoofed);
 
-  // Surface a heuristic Zen match even when Firefox legitimately wins the score.
+  // Zen has no unique web-content marker, so its result is always heuristic —
+  // annotate it whether Zen won or is a strong runner-up.
   const zen = scored.find((c) => c.name === 'Zen Browser');
-  if (zen && browser.name !== 'Zen Browser') {
+  if (browser.name === 'Zen Browser') {
+    notes.push(
+      'Zen match is heuristic (from default prefs + window chrome), not a unique marker — a stock Firefox with Global Privacy Control and vertical tabs enabled could look the same.',
+    );
+  } else if (zen) {
     notes.push(
       `Possible Zen Browser: ${zen.evidence.map((e) => e.signal).join('; ')}. These are Zen defaults, not a unique marker, so it still reports as ${browser.name}.`,
     );

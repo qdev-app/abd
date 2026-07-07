@@ -60,7 +60,7 @@ const fixtures = {
     // Tor, does not round the reported window to 200x100 steps.
     screen: { width: 1536, height: 864, pixelRatio: 1.25, colorDepth: 24 },
   },
-  'Zen (GPC + vertical-sidebar heuristic)': {
+  'Zen (GPC + vertical-sidebar constellation)': {
     ...base,
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
     oscpu: 'Intel Mac OS X 10.15',
@@ -70,8 +70,19 @@ const fixtures = {
     timezone: 'Europe/Berlin',
     hardwareConcurrency: 15,
     globalPrivacyControl: true, // Zen default; stock Firefox is off
-    chromeWidth: 244, // vertical-tab sidebar
+    chromeWidth: 244, // vertical-tab sidebar (stock Firefox is 0)
     chromeHeight: 112,
+  },
+  'Firefox with GPC only (no sidebar)': {
+    ...base,
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
+    oscpu: 'Intel Mac OS X 10.15',
+    productSub: '20100101',
+    css: { '-moz-appearance:none': true },
+    globals: { MozAppearance: true },
+    globalPrivacyControl: true,
+    chromeWidth: 0, // no vertical sidebar
+    chromeHeight: 84,
   },
   'Tor Browser (letterboxed + full RFP)': {
     ...base,
@@ -123,11 +134,15 @@ asrt(detect(fixtures['Arc (claims Chrome, CSS var exposes it)']).browser.name ==
 asrt(detect(fixtures['Stock Firefox (live, no fork markers)']).browser.name === 'Mozilla Firefox', 'Firefox not detected');
 asrt(detect(fixtures['LibreWolf-ish Firefox with RFP (claims Firefox)']).browser.name === 'LibreWolf', 'LibreWolf not detected');
 asrt(detect(fixtures['Tor Browser (letterboxed + full RFP)']).browser.name === 'Tor Browser', 'Tor not detected');
-// Zen heuristic: Firefox stays top (honest), but Zen surfaces as a candidate + note.
-const zenR = detect(fixtures['Zen (GPC + vertical-sidebar heuristic)']);
-asrt(zenR.browser.name === 'Mozilla Firefox', 'Zen heuristic should not override Firefox as top pick');
-asrt(zenR.candidates.some((c) => c.name === 'Zen Browser'), 'Zen should appear as a candidate');
-asrt(zenR.notes.some((n) => n.includes('Possible Zen')), 'Zen possibility note should be present');
+// Zen constellation (GPC + sidebar) → Zen becomes the top pick, with a caveat note.
+const zenR = detect(fixtures['Zen (GPC + vertical-sidebar constellation)']);
+console.log('  Zen constellation → top:', zenR.browser.name, '| candidates:', zenR.candidates.map((c) => c.name).join(', '));
+asrt(zenR.browser.name === 'Zen Browser', 'GPC + sidebar constellation should make Zen the top pick');
+asrt(zenR.notes.some((n) => n.includes('heuristic')), 'Zen heuristic caveat note should be present');
+// GPC alone (no sidebar) is too weak → Firefox stays top, Zen is only a candidate.
+const gpcOnly = detect(fixtures['Firefox with GPC only (no sidebar)']);
+asrt(gpcOnly.browser.name === 'Mozilla Firefox', 'GPC alone should NOT override Firefox');
+asrt(gpcOnly.candidates.some((c) => c.name === 'Zen Browser'), 'Zen should still surface as a candidate on GPC alone');
 
 // --- Version-consistency spoof detection + engine cross-confirmation ---
 console.log('\n=== version consistency ===');
