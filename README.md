@@ -97,6 +97,50 @@ import { InstallDuo } from '@/components/install-duo';
 
 Regenerate the registry JSON after editing a component: `bun run registry`.
 
+## Supported browsers
+
+The **Behind spoofed UA?** column is the point of the project: ✅ means a behavioural/structural signal identifies the browser even if its User-Agent is shared or spoofed; ⚠️ UA-token means detection relies on a distinctive UA string (fine in practice, since these don't masquerade as another browser).
+
+<!-- BROWSERS:START (auto-generated — run `bun run docs:browsers`) -->
+### Blink / Chromium
+
+| Browser | Primary signal | Behind spoofed UA? |
+| --- | --- | --- |
+| **Brave** | `navigator.brave.isBrave()` + `userAgentData` brand | ✅ definitive |
+| **Microsoft Edge** | `userAgentData` brand "Microsoft Edge" + `Edg/` | ✅ |
+| **Opera** | brand "Opera" + `window.opr` + `OPR/` | ✅ |
+| **Vivaldi** | `Vivaldi/` token (hides from brands) | ⚠️ UA-token |
+| **Samsung Internet** | brand + `SamsungBrowser/` | ✅ |
+| **Yandex Browser** | brand + `YaBrowser/` | ✅ |
+| **Arc** | injected `--arc-palette-title` CSS variable | ✅ (behind Chrome’s UA) |
+| **Google Chrome** | brand "Google Chrome" | ✅ |
+| **Chromium** | brand "Chromium", no vendor brand | ✅ |
+
+### Gecko / Firefox
+
+| Browser | Primary signal | Behind spoofed UA? |
+| --- | --- | --- |
+| **Tor Browser** | RFP profile: UTC + letterboxing + timer clamp + canvas block | ✅ heuristic |
+| **LibreWolf** | `LibreWolf/` token, or RFP profile | ✅ heuristic |
+| **Waterfox** | `Waterfox/` token | ⚠️ UA-token |
+| **Pale Moon** | `PaleMoon/` / `Goanna/` engine token | ⚠️ UA-token |
+| **Floorp** | `Floorp/` token | ⚠️ UA-token |
+| **Zen Browser** | floating-window edge insets + GPC (windowed) | ✅ **(behind Firefox’s UA)** |
+| **Mozilla Firefox** | `oscpu`, `productSub`, `-moz-appearance`, SpiderMonkey `InternalError` | ✅ |
+
+### WebKit
+
+| Browser | Primary signal | Behind spoofed UA? |
+| --- | --- | --- |
+| **Chrome (iOS)** | `CriOS/` (engine confirmed WebKit) | ⚠️ UA-token |
+| **Firefox (iOS)** | `FxiOS/` | ⚠️ UA-token |
+| **Edge (iOS)** | `EdgiOS/` | ⚠️ UA-token |
+| **GNOME Web (Epiphany)** | `Epiphany/` | ⚠️ UA-token |
+| **Safari** | vendor "Apple" + `ApplePaySession` + `Version/` | ✅ |
+<!-- BROWSERS:END -->
+
+Beyond the browser name, detection also reports the **engine** (Blink/Gecko/WebKit, near-unspoofable), a **UA-spoof flag** (feature↔version consistency), and a **TLS/JA4** network fingerprint (`abd tls`).
+
 ## How detection works
 
 `detect(signals)` runs three things and reconciles them:
@@ -125,7 +169,7 @@ The strongest per-family signals:
 
 ### Adding a signature
 
-Signatures are small `evaluate(signals) → Evidence[]` functions in `packages/core/src/signatures/`. Return the evidence that fired (with weights); an empty array means no match. Add fixtures to `packages/core/test/fixtures.mjs` and run `bun run test`. **PRs adding new tells — especially for Zen and other chrome-only forks — are very welcome.**
+Signatures are small `evaluate(signals) → Evidence[]` functions in `packages/core/src/signatures/`. Return the evidence that fired (with weights); an empty array means no match. Add fixtures to `packages/core/test/fixtures.mjs` and run `bun run test`. When you add a browser, also add its annotation in `scripts/gen-supported-browsers.ts` and run `bun run docs:browsers` to refresh the table above (the script fails if a signature has no annotation, so the docs can't drift). **PRs adding new tells — especially for Zen and other chrome-only forks — are very welcome.**
 
 ## Layout
 
