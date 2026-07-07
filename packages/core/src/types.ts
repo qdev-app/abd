@@ -58,6 +58,22 @@ export interface Signals {
   /** CSS.supports() probes, e.g. { '-moz-appearance:none': true }. */
   css: Record<string, boolean>;
 
+  // --- Engine cross-confirmation: JS quirks that are very hard to spoof ---
+  /** typeof Intl.v8BreakIterator === 'function' — V8 (Blink) only. */
+  intlV8BreakIterator?: boolean;
+  /** typeof Error.captureStackTrace === 'function' — V8 (Blink) only. */
+  errorCaptureStackTrace?: boolean;
+  /** SpiderMonkey exposes the InternalError type — Gecko only. */
+  spiderMonkeyInternalError?: boolean;
+  /** Error stack line style: 'v8' = "    at fn"; 'moz-webkit' = "fn@url". */
+  stackFormat?: 'v8' | 'moz-webkit' | 'unknown';
+
+  // --- Fingerprinting-hardening measurements (RFP/FPP detectors) ---
+  /** Measured performance.now() granularity in ms. RFP clamps this (Tor ≈ 100). */
+  timerResolutionMs?: number;
+  /** True when a canvas readback does not return the colour we drew (RFP block). */
+  canvasBlocked?: boolean;
+
   /** navigator.globalPrivacyControl — Zen enables this by default; stock Firefox is off. */
   globalPrivacyControl?: boolean;
 
@@ -136,12 +152,25 @@ export interface DetectionResult {
   claimedByUA: ClaimedByUA;
   /** True when the live-detected browser disagrees with the UA claim. */
   spoofed: boolean;
+  /** UA-version vs feature-availability cross-check (undefined in UA-only mode). */
+  versionCheck?: VersionCheck;
   /** All scored candidates, best first. */
   candidates: Candidate[];
   /** Human-readable caveats and explanations. */
   notes: string[];
   /** Echoes Signals.source so callers can gauge reliability. */
   source: SignalSource;
+}
+
+export interface VersionCheck {
+  engine: EngineName;
+  /** Major version the UA claims (null if unparseable / UA-only). */
+  claimedMajor: number | null;
+  /** Highest version implied by the features actually present. */
+  impliedMinMajor: number | null;
+  /** False when present features require a newer engine than the UA claims. */
+  consistent: boolean;
+  evidence: Evidence[];
 }
 
 /** A signature contributes evidence toward one browser given a set of signals. */

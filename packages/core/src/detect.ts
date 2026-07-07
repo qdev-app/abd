@@ -2,6 +2,7 @@ import { detectEngine } from './engine.js';
 import { signatures } from './signatures/index.js';
 import type { Candidate, DetectionResult, Signals } from './types.js';
 import { parseClaim } from './uaparse.js';
+import { checkVersionConsistency } from './version.js';
 
 /**
  * Core detection. Runs every signature against the signals, ranks the candidates,
@@ -42,7 +43,17 @@ export function detect(signals: Signals): DetectionResult {
     notes.push('No behavioural signature matched; result is based on the User-Agent string alone.');
   }
 
-  const spoofed = isSpoofed(browser.name, claimedByUA.name, engine.name, browser.engine);
+  let spoofed = isSpoofed(browser.name, claimedByUA.name, engine.name, browser.engine);
+
+  // UA↔feature version consistency (live signals only).
+  let versionCheck: DetectionResult['versionCheck'];
+  if (signals.source === 'live') {
+    versionCheck = checkVersionConsistency(signals, engine.name, claimedByUA.version);
+    if (!versionCheck.consistent) {
+      spoofed = true;
+      for (const e of versionCheck.evidence) notes.push(e.signal + '.');
+    }
+  }
 
   addContextNotes(notes, signals, browser, claimedByUA.name, engine, spoofed);
 
@@ -59,6 +70,7 @@ export function detect(signals: Signals): DetectionResult {
     engine,
     claimedByUA,
     spoofed,
+    versionCheck,
     candidates: scored,
     notes,
     source: signals.source,

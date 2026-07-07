@@ -86,6 +86,21 @@ const fixtures = {
     language: 'en-US',
     languages: ['en-US'],
     screen: { width: 1600, height: 900, pixelRatio: 1, colorDepth: 24 },
+    timerResolutionMs: 100, // Tor clamps the timer
+    canvasBlocked: true,
+  },
+  'Spoofed UA (claims Chrome 90 but ships modern V8 APIs)': {
+    ...base,
+    source: 'live',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.0.0 Safari/537.36',
+    vendor: 'Google Inc.',
+    uaData: { brands: [{ brand: 'Chromium', version: '90' }], mobile: false, platform: 'Windows' },
+    globals: { chrome: true },
+    intlV8BreakIterator: true,
+    errorCaptureStackTrace: true,
+    stackFormat: 'v8',
+    features: { 'Array.fromAsync': true, 'URL.canParse': true },
+    css: { ':has()': true },
   },
 };
 
@@ -113,6 +128,17 @@ const zenR = detect(fixtures['Zen (GPC + vertical-sidebar heuristic)']);
 asrt(zenR.browser.name === 'Mozilla Firefox', 'Zen heuristic should not override Firefox as top pick');
 asrt(zenR.candidates.some((c) => c.name === 'Zen Browser'), 'Zen should appear as a candidate');
 asrt(zenR.notes.some((n) => n.includes('Possible Zen')), 'Zen possibility note should be present');
+
+// --- Version-consistency spoof detection + engine cross-confirmation ---
+console.log('\n=== version consistency ===');
+const spoofR = detect(fixtures['Spoofed UA (claims Chrome 90 but ships modern V8 APIs)']);
+console.log('  claimed:', spoofR.claimedByUA.version, '| impliedMin:', spoofR.versionCheck?.impliedMinMajor, '| consistent:', spoofR.versionCheck?.consistent, '| spoofed:', spoofR.spoofed);
+asrt(spoofR.versionCheck && spoofR.versionCheck.consistent === false, 'modern APIs under Chrome 90 UA should be inconsistent');
+asrt(spoofR.spoofed === true, 'version mismatch should mark spoofed');
+asrt(spoofR.engine.name === 'Blink', 'V8 quirks should confirm Blink engine');
+// Tor now also fires the measured-hardening evidence.
+const torR = detect(fixtures['Tor Browser (letterboxed + full RFP)']);
+asrt(torR.browser.evidence.some((e) => /timer resolution clamped/.test(e.signal)), 'Tor should show clamped-timer evidence');
 
 // --- Install target resolution ---
 console.log('\n=== resolveInstallTargets ===');

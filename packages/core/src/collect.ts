@@ -33,6 +33,12 @@ export async function collectSignals(): Promise<Signals> {
     ),
     chromeWidth: safe(() => window.outerWidth - window.innerWidth, undefined),
     chromeHeight: safe(() => window.outerHeight - window.innerHeight, undefined),
+    intlV8BreakIterator: typeof (Intl as unknown as { v8BreakIterator?: unknown }).v8BreakIterator === 'function',
+    errorCaptureStackTrace: typeof (Error as unknown as { captureStackTrace?: unknown }).captureStackTrace === 'function',
+    spiderMonkeyInternalError: typeof (globalThis as unknown as { InternalError?: unknown }).InternalError === 'function',
+    stackFormat: detectStackFormat(),
+    timerResolutionMs: measureTimerResolution(),
+    canvasBlocked: measureCanvasBlocked(),
     brave,
     globals: collectGlobals(win, nav),
     features: collectFeatures(),
@@ -105,16 +111,22 @@ function collectGlobals(win: Record<string, unknown>, nav: Record<string, unknow
 }
 
 function collectFeatures(): Record<string, boolean> {
+  const fn = (v: unknown) => typeof v === 'function';
   return {
-    // Rough engine-era probes — presence differs across engines/versions.
-    'Array.fromAsync': typeof (Array as unknown as { fromAsync?: unknown }).fromAsync === 'function',
-    'navigator.getBattery': typeof (navigator as unknown as { getBattery?: unknown }).getBattery === 'function',
-    'window.showDirectoryPicker': typeof (window as unknown as { showDirectoryPicker?: unknown }).showDirectoryPicker === 'function',
+    // Version-gated JS features (keys referenced by version.ts).
+    'Array.fromAsync': fn((Array as unknown as { fromAsync?: unknown }).fromAsync),
+    'Promise.withResolvers': fn((Promise as unknown as { withResolvers?: unknown }).withResolvers),
+    'URL.canParse': fn((URL as unknown as { canParse?: unknown }).canParse),
+    structuredClone: fn((globalThis as unknown as { structuredClone?: unknown }).structuredClone),
+    'navigator.userAgentData': (navigator as unknown as { userAgentData?: unknown }).userAgentData != null,
+    // Misc engine-era probes.
+    'navigator.getBattery': fn((navigator as unknown as { getBattery?: unknown }).getBattery),
+    'window.showDirectoryPicker': fn((window as unknown as { showDirectoryPicker?: unknown }).showDirectoryPicker),
     'window.chrome.loadTimes': safe(
-      () => typeof (window as unknown as { chrome?: { loadTimes?: unknown } }).chrome?.loadTimes === 'function',
+      () => fn((window as unknown as { chrome?: { loadTimes?: unknown } }).chrome?.loadTimes),
       false,
     ),
-    OffscreenCanvas: typeof (window as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas === 'function',
+    OffscreenCanvas: fn((window as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas),
   };
 }
 
@@ -126,12 +138,76 @@ function collectCss(): Record<string, boolean> {
       return false;
     }
   };
+  const selector = (sel: string): boolean => {
+    try {
+      return typeof CSS !== 'undefined' && CSS.supports(`selector(${sel})`);
+    } catch {
+      return false;
+    }
+  };
   return {
     '-moz-appearance:none': supports('-moz-appearance', 'none'),
     '-webkit-touch-callout:none': supports('-webkit-touch-callout', 'none'),
     '-apple-pay-button-style:plain': supports('-apple-pay-button-style', 'plain'),
     'accent-color:auto': supports('accent-color', 'auto'),
+    // Version-gated CSS features (keys referenced by version.ts).
+    ':has()': selector(':has(*)'),
+    'text-wrap:balance': supports('text-wrap', 'balance'),
+    'color:light-dark': supports('color', 'light-dark(#000,#fff)'),
+    'field-sizing:content': supports('field-sizing', 'content'),
   };
+}
+
+/** V8 stacks read "    at fn (url)"; SpiderMonkey & JSC read "fn@url". */
+function detectStackFormat(): 'v8' | 'moz-webkit' | 'unknown' {
+  try {
+    const stack = new Error('x').stack ?? '';
+    if (/\n\s*at\s/.test(stack) || stack.startsWith('Error')) {
+      if (/@/.test(stack) && !/\n\s*at\s/.test(stack)) return 'moz-webkit';
+      return 'v8';
+    }
+    if (/@/.test(stack)) return 'moz-webkit';
+    return 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+/** Busy-loop to find the smallest non-zero performance.now() delta. */
+function measureTimerResolution(): number | undefined {
+  try {
+    if (typeof performance === 'undefined') return undefined;
+    let min = Infinity;
+    let last = performance.now();
+    for (let i = 0; i < 50000 && min > 0.0005; i++) {
+      const n = performance.now();
+      const d = n - last;
+      if (d > 0 && d < min) min = d;
+      last = n;
+    }
+    return Number.isFinite(min) ? min : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Draw a known colour and read it back — RFP returns white/blank instead. */
+function measureCanvasBlocked(): boolean | undefined {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 10;
+    c.height = 10;
+    const ctx = c.getContext('2d');
+    if (!ctx) return undefined;
+    ctx.fillStyle = 'rgb(255,102,0)';
+    ctx.fillRect(0, 0, 10, 10);
+    const px = ctx.getImageData(2, 2, 1, 1).data;
+    // Expect ~[255,102,0]. Anything far off ⇒ blocked/randomised.
+    const ok = px[0]! > 220 && px[1]! > 60 && px[1]! < 150 && px[2]! < 60;
+    return !ok;
+  } catch {
+    return undefined;
+  }
 }
 
 function safe<T>(fn: () => T, fallback: T): T {

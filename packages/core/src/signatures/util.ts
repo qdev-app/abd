@@ -35,6 +35,10 @@ export function rfpEvidence(s: Signals): Evidence[] {
   if (s.languages.length <= 1 && s.language === 'en-US') ev.push({ signal: 'languages collapsed to ["en-US"] (RFP)', weight: 0.75 });
   if (s.pdfViewerEnabled === false) ev.push({ signal: 'pdfViewerEnabled false (RFP)', weight: 0.5 });
   if (s.screen && isLetterboxed(s.screen)) ev.push({ signal: 'screen dimensions rounded/letterboxed (RFP)', weight: 1 });
+  // Measured hardening (see collect.ts). Tor clamps the timer to ~100ms.
+  if (s.timerResolutionMs != null && s.timerResolutionMs >= 50)
+    ev.push({ signal: `timer resolution clamped to ~${Math.round(s.timerResolutionMs)}ms (Tor-class RFP)`, weight: 2 });
+  if (s.canvasBlocked === true) ev.push({ signal: 'canvas readback blocked/randomised (RFP)', weight: 1.5 });
   return ev;
 }
 
