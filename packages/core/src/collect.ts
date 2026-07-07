@@ -33,6 +33,7 @@ export async function collectSignals(): Promise<Signals> {
     ),
     chromeWidth: safe(() => window.outerWidth - window.innerWidth, undefined),
     chromeHeight: safe(() => window.outerHeight - window.innerHeight, undefined),
+    ...chromeInsets(),
     intlV8BreakIterator: typeof (Intl as unknown as { v8BreakIterator?: unknown }).v8BreakIterator === 'function',
     errorCaptureStackTrace: typeof (Error as unknown as { captureStackTrace?: unknown }).captureStackTrace === 'function',
     spiderMonkeyInternalError: typeof (globalThis as unknown as { InternalError?: unknown }).InternalError === 'function',
@@ -207,6 +208,30 @@ function measureCanvasBlocked(): boolean | undefined {
     return !ok;
   } catch {
     return undefined;
+  }
+}
+
+/**
+ * Decompose the window chrome into left/top/right/bottom insets using Gecko's
+ * mozInnerScreenX/Y (the screen position of the content area's top-left, in CSS
+ * px). Returns {} on non-Gecko browsers where mozInnerScreenX is unavailable.
+ */
+function chromeInsets(): {
+  chromeLeft?: number;
+  chromeTop?: number;
+  chromeRight?: number;
+  chromeBottom?: number;
+} {
+  try {
+    const w = window as unknown as { mozInnerScreenX?: number; mozInnerScreenY?: number };
+    if (typeof w.mozInnerScreenX !== 'number' || typeof w.mozInnerScreenY !== 'number') return {};
+    const left = Math.round(w.mozInnerScreenX - window.screenX);
+    const top = Math.round(w.mozInnerScreenY - window.screenY);
+    const right = Math.round(window.screenX + window.outerWidth - (w.mozInnerScreenX + window.innerWidth));
+    const bottom = Math.round(window.screenY + window.outerHeight - (w.mozInnerScreenY + window.innerHeight));
+    return { chromeLeft: left, chromeTop: top, chromeRight: right, chromeBottom: bottom };
+  } catch {
+    return {};
   }
 }
 

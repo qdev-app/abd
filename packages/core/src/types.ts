@@ -83,6 +83,16 @@ export interface Signals {
   /** window.outerHeight - innerHeight. */
   chromeHeight?: number;
 
+  /**
+   * Chrome insets decomposed via Gecko's window.mozInnerScreenX/Y (Gecko only).
+   * Reveals which SIDE the sidebar is on and its exact width — the key to
+   * telling Zen's left sidebar apart from Firefox's native vertical tabs.
+   */
+  chromeLeft?: number;
+  chromeTop?: number;
+  chromeRight?: number;
+  chromeBottom?: number;
+
   /** Intl timezone — RFP forces "UTC". */
   timezone?: string;
 

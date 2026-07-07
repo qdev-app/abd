@@ -87,6 +87,7 @@ function geometry(): Record<string, number> {
       return -1;
     }
   };
+  const w = window as unknown as { mozInnerScreenX?: number; mozInnerScreenY?: number };
   return {
     innerWidth: num(() => window.innerWidth),
     innerHeight: num(() => window.innerHeight),
@@ -95,6 +96,11 @@ function geometry(): Record<string, number> {
     // chrome thickness — Zen's vertical tabs / compact mode change these vs Firefox.
     chromeWidth: num(() => window.outerWidth - window.innerWidth),
     chromeHeight: num(() => window.outerHeight - window.innerHeight),
+    // Decomposed insets (Gecko mozInnerScreenX/Y) — reveal sidebar side + width.
+    chromeLeft: num(() => Math.round(w.mozInnerScreenX! - window.screenX)),
+    chromeTop: num(() => Math.round(w.mozInnerScreenY! - window.screenY)),
+    chromeRight: num(() => Math.round(window.screenX + window.outerWidth - (w.mozInnerScreenX! + window.innerWidth))),
+    chromeBottom: num(() => Math.round(window.screenY + window.outerHeight - (w.mozInnerScreenY! + window.innerHeight))),
     screenWidth: num(() => screen.width),
     screenHeight: num(() => screen.height),
     availWidth: num(() => screen.availWidth),

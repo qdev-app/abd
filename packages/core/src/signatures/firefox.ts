@@ -71,14 +71,21 @@ export const firefoxSignatures: Signature[] = [
       if (uaHas(s, /\bZen\//)) ev.push({ signal: 'UA token Zen/ (custom build)', weight: 5 });
       if (isGecko(s)) {
         const gpc = s.globalPrivacyControl === true;
-        const sidebar = (s.chromeWidth ?? 0) >= 120;
-        const tallChrome = (s.chromeHeight ?? 0) >= 95;
+        // Prefer the decomposed left inset (a LEFT sidebar specifically) over the
+        // raw chromeWidth when Gecko exposed mozInnerScreenX.
+        const sidebarW = s.chromeLeft ?? s.chromeWidth ?? 0;
+        const sidebar = sidebarW >= 120;
+        const leftSidebar = (s.chromeLeft ?? 0) >= 120 && (s.chromeRight ?? 99) <= 40;
+        const tallChrome = (s.chromeTop ?? s.chromeHeight ?? 0) >= 95;
         if (gpc)
           ev.push({ signal: 'Global Privacy Control on by default (Zen default; stock Firefox is off)', weight: 1 });
         if (sidebar)
-          ev.push({ signal: `~${s.chromeWidth}px horizontal chrome ⇒ vertical-tab sidebar (stock Firefox is 0)`, weight: 1.5 });
+          ev.push({
+            signal: `~${sidebarW}px ${leftSidebar ? 'left ' : ''}vertical-tab sidebar (stock Firefox is 0)`,
+            weight: 1.5,
+          });
         if (sidebar && tallChrome)
-          ev.push({ signal: `~${s.chromeHeight}px top chrome consistent with Zen's toolbar`, weight: 0.5 });
+          ev.push({ signal: `~${s.chromeTop ?? s.chromeHeight}px top chrome consistent with Zen's toolbar`, weight: 0.5 });
         // Constellation bonus: an empirical Zen-vs-Firefox diff showed GPC + a
         // vertical sidebar are stock Firefox's two clearest differences from Zen.
         // Together (not alone) they outweigh the Firefox base score, so Zen wins
