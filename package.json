@@ -1,0 +1,21 @@
+{
+  "name": "abd-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Advanced Browser Detector — identify the real browser behind a spoofed user-agent",
+  "license": "MIT",
+  "packageManager": "pnpm@11.10.0",
+  "scripts": {
+    "build": "pnpm --filter @abd/core build && pnpm --filter @abd/cli build",
+    "dev:web": "pnpm --filter @abd/web dev",
+    "abd": "bun packages/cli/src/index.ts",
+    "serve": "bun packages/cli/src/index.ts serve",
+    "registry": "pnpm --filter @abd/web registry",
+    "test": "pnpm --filter @abd/core test",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r exec rm -rf dist node_modules/.cache"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

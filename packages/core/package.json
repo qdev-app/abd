@@ -1,0 +1,24 @@
+{
+  "name": "@abd/core",
+  "version": "0.1.0",
+  "description": "Advanced Browser Detector — engine-level detection of the real browser behind a spoofed UA",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "bun test/fixtures.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": ["browser-detection", "user-agent", "fingerprint", "zen", "brave", "firefox-fork"]
+}

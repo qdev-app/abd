@@ -1,0 +1,24 @@
+{
+  "name": "@abd/cli",
+  "version": "0.1.0",
+  "description": "CLI for the Advanced Browser Detector — UA parsing + live signature capture",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "abd": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@abd/core": "workspace:*",
+    "esbuild": "^0.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "abd",
+  "homepage": "https://github.com/qdev-app/abd",
+  "items": [
+    {
+      "name": "browser-detector",
+      "type": "registry:component",
+      "title": "Browser Detector",
+      "description": "Animated widget that identifies the real browser behind a spoofed/shared User-Agent using live signals.",
+      "dependencies": ["@abd/core", "motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/registry/browser-detector.tsx",
+          "type": "registry:component",
+          "target": "components/browser-detector.tsx"
+        }
+      ]
+    }
+  ]
+}

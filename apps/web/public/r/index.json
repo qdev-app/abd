@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "name": "browser-detector",
+      "type": "registry:component",
+      "title": "Browser Detector",
+      "description": "Animated widget that identifies the real browser behind a spoofed/shared User-Agent using live signals."
+    }
+  ]
+}
