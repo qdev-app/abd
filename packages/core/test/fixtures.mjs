@@ -70,13 +70,14 @@ const fixtures = {
     timezone: 'Europe/Berlin',
     hardwareConcurrency: 15,
     globalPrivacyControl: true, // Zen default; stock Firefox is off
-    // Real Zen geometry: left sidebar + THICK chrome (tall top + bottom bar).
+    // Real live Zen geometry: left sidebar + a SMALL bottom chrome inset (~8px,
+    // variable) that no Firefox variant has.
     chromeLeft: 269,
     chromeRight: 8,
     chromeTop: 72,
-    chromeBottom: 40,
+    chromeBottom: 8,
     chromeWidth: 277,
-    chromeHeight: 112,
+    chromeHeight: 80,
   },
   'Zen (sidebar hidden — no tell but GPC, honest floor)': {
     ...base,
