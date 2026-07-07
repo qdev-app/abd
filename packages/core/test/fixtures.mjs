@@ -96,7 +96,7 @@ const fixtures = {
     chromeWidth: 8,
     chromeHeight: 48,
   },
-  'Zen (fullscreen — no insets, honest floor)': {
+  'Zen (fullscreen compact — detected via no-toolbar)': {
     ...base,
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
     oscpu: 'Intel Mac OS X 10.15',
@@ -104,14 +104,31 @@ const fixtures = {
     css: { '-moz-appearance:none': true },
     globals: { MozAppearance: true },
     globalPrivacyControl: true,
-    // True fullscreen: the floating insets collapse, so Zen is geometrically
-    // identical to Firefox. Only GPC remains → NOT reliably Zen. This is the floor.
+    // Fullscreen collapses the floating insets, but Zen compact shows NO toolbar
+    // (chromeTop ~0) whereas default Firefox always keeps its toolbar. Detected.
     chromeLeft: 0,
     chromeRight: 0,
     chromeTop: 0,
     chromeBottom: 0,
     chromeWidth: 0,
     chromeHeight: 0,
+  },
+  'Firefox fullscreen (toolbar shown — must NOT be Zen)': {
+    ...base,
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0',
+    oscpu: 'Intel Mac OS X 10.15',
+    productSub: '20100101',
+    css: { '-moz-appearance:none': true },
+    globals: { MozAppearance: true },
+    globalPrivacyControl: false,
+    // macOS default Firefox keeps its toolbar in fullscreen (chromeTop > 0) and
+    // sits flush to the other edges. No Zen tell.
+    chromeLeft: 0,
+    chromeRight: 0,
+    chromeTop: 44,
+    chromeBottom: 0,
+    chromeWidth: 0,
+    chromeHeight: 44,
   },
   'Firefox with vertical tabs + GPC (must NOT be Zen)': {
     ...base,
@@ -220,10 +237,14 @@ asrt(zenR.notes.some((n) => n.includes('heuristic')), 'Zen heuristic caveat note
 const zenHidden = detect(fixtures['Zen (windowed, sidebar hidden — floating window still detects)']);
 console.log('  Zen (windowed, sidebar hidden) → top:', zenHidden.browser.name);
 asrt(zenHidden.browser.name === 'Zen Browser', 'Windowed Zen without sidebar should STILL detect (floating window)');
-// Zen FULLSCREEN → insets collapse → indistinguishable from Firefox (the floor).
-const zenFs = detect(fixtures['Zen (fullscreen — no insets, honest floor)']);
-console.log('  Zen (fullscreen) → top:', zenFs.browser.name, '(expected Firefox — floor)');
-asrt(zenFs.browser.name === 'Mozilla Firefox', 'Fullscreen Zen has no geometric tell (floor)');
+// Zen FULLSCREEN compact → floating insets collapse, but no-toolbar tells it's Zen.
+const zenFs = detect(fixtures['Zen (fullscreen compact — detected via no-toolbar)']);
+console.log('  Zen (fullscreen compact) → top:', zenFs.browser.name);
+asrt(zenFs.browser.name === 'Zen Browser', 'Fullscreen compact Zen detected via missing toolbar');
+// Firefox fullscreen keeps its toolbar → must stay Firefox.
+const ffFs = detect(fixtures['Firefox fullscreen (toolbar shown — must NOT be Zen)']);
+console.log('  Firefox (fullscreen) → top:', ffFs.browser.name);
+asrt(ffFs.browser.name === 'Mozilla Firefox', 'Fullscreen Firefox with toolbar must NOT be Zen');
 // Firefox vertical tabs + GPC must NOT read as Zen (no bottom bar).
 const ffvt = detect(fixtures['Firefox with vertical tabs + GPC (must NOT be Zen)']);
 console.log('  Firefox-VT → top:', ffvt.browser.name);

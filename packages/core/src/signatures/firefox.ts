@@ -82,6 +82,13 @@ export const firefoxSignatures: Signature[] = [
         const rightInset = (s.chromeRight ?? 0) >= 4;
         const bottomInset = (s.chromeBottom ?? 0) >= 4;
         const floatingWindow = rightInset && bottomInset;
+        // Default Firefox ALWAYS shows a toolbar (~40px+), windowed or fullscreen
+        // — it only vanishes with the non-default "Hide Toolbars" setting. Zen's
+        // compact mode shows none. So a near-zero top inset is a Zen tell, and
+        // crucially it works in fullscreen where the floating insets collapse.
+        const noTopToolbar = s.chromeTop != null && s.chromeTop < 20;
+
+        let structural = false;
 
         if (gpc)
           ev.push({ signal: 'Global Privacy Control on by default (Zen default; stock Firefox is off)', weight: 1 });
@@ -92,8 +99,21 @@ export const firefoxSignatures: Signature[] = [
             weight: 3,
           });
           if (leftSidebar) ev.push({ signal: `~${sidebarW}px left sidebar also consistent with Zen`, weight: 0.5 });
-          if (gpc) ev.push({ signal: 'GPC + Zen floating-window constellation (excludes all Firefox variants)', weight: 1 });
-        } else if (!haveInsets && sidebarW >= 120) {
+          structural = true;
+        }
+
+        if (noTopToolbar) {
+          ev.push({
+            signal: `no top toolbar (chromeTop ${s.chromeTop}px) — Zen compact mode; default Firefox always shows a toolbar`,
+            weight: 2.5,
+          });
+          structural = true;
+        }
+
+        if (gpc && structural)
+          ev.push({ signal: 'GPC + Zen chrome constellation (excludes all default-config Firefox variants)', weight: 1 });
+
+        if (!floatingWindow && !noTopToolbar && !haveInsets && sidebarW >= 120) {
           // No decomposed insets ⇒ can't separate Zen from Firefox vertical tabs.
           ev.push({
             signal: `~${sidebarW}px vertical sidebar (can't separate Zen from Firefox vertical tabs without chrome insets)`,
