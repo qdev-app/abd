@@ -7,11 +7,11 @@
   "workspaces": ["packages/*"],
   "trustedDependencies": ["esbuild"],
   "scripts": {
-    "build": "bun run --filter '@qdev-app/abd-core' build && bun run --filter '@qdev-app/abd-react' build && bun run --filter '@abd/cli' build",
+    "build": "bun run --filter '@qdev.app/abd-core' build && bun run --filter '@qdev.app/abd-react' build && bun run --filter '@abd/cli' build",
     "abd": "bun packages/cli/src/index.ts",
     "serve": "bun packages/cli/src/index.ts serve",
     "tls": "bun run --filter '@abd/cli' build && node packages/cli/dist/index.js tls",
-    "docs:browsers": "bun run --filter '@qdev-app/abd-core' build && bun scripts/gen-supported-browsers.ts",
+    "docs:browsers": "bun run --filter '@qdev.app/abd-core' build && bun scripts/gen-supported-browsers.ts",
     "test": "bun run build && bun run --filter '*' test",
     "typecheck": "bun run --filter '*' typecheck"
   },

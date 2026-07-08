@@ -1,5 +1,5 @@
 {
-  "name": "@qdev-app/abd-react",
+  "name": "@qdev.app/abd-react",
   "version": "0.1.0",
   "description": "React components + hook for the Advanced Browser Detector — show the real browser behind a spoofed UA",
   "license": "MIT",
@@ -24,7 +24,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@qdev-app/abd-core": "^0.1.0"
+    "@qdev.app/abd-core": "^0.1.0"
   },
   "peerDependencies": {
     "react": ">=18",

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { collectSignals, detect, type DetectionResult } from '@qdev-app/abd-core';
+import { collectSignals, detect, type DetectionResult } from '@qdev.app/abd-core';
 
 export type BrowserDetectionState =
   | { status: 'loading'; result: null; error: null }

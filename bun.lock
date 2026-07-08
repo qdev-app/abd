@@ -15,7 +15,7 @@
         "abd": "./dist/index.js",
       },
       "dependencies": {
-        "@qdev-app/abd-core": "workspace:*",
+        "@qdev.app/abd-core": "workspace:*",
         "esbuild": "^0.24.0",
       },
       "devDependencies": {
@@ -23,14 +23,14 @@
       },
     },
     "packages/core": {
-      "name": "@qdev-app/abd-core",
+      "name": "@qdev.app/abd-core",
       "version": "0.1.0",
     },
     "packages/react": {
-      "name": "@qdev-app/abd-react",
+      "name": "@qdev.app/abd-react",
       "version": "0.1.0",
       "dependencies": {
-        "@qdev-app/abd-core": "^0.1.0",
+        "@qdev.app/abd-core": "^0.1.0",
       },
       "devDependencies": {
         "@types/react": "^18.3.12",
@@ -100,9 +100,9 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.24.2", "", { "os": "win32", "cpu": "x64" }, "sha512-7VTgWzgMGvup6aSqDPLiW5zHaxYJGTO4OokMjIlrCtf+VpEL+cXKtCvg723iguPYI5oaUNdS+/V7OU2gvXVWEg=="],
 
-    "@qdev-app/abd-core": ["@qdev-app/abd-core@workspace:packages/core"],
+    "@qdev.app/abd-core": ["@qdev.app/abd-core@workspace:packages/core"],
 
-    "@qdev-app/abd-react": ["@qdev-app/abd-react@workspace:packages/react"],
+    "@qdev.app/abd-react": ["@qdev.app/abd-react@workspace:packages/react"],
 
     "@types/node": ["@types/node@22.20.0", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-QWlFW2wf3nTjC13/DqRnBpR4ZO36VJH/JVBkA/vcnmbTBNQIlnObqyqZE1tUR7+Ni23Lda8R1BxMfbXRpCUx5g=="],
 

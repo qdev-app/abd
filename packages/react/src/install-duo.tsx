@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { resolveInstallTargets, type DetectionResult, type InstallTarget } from '@qdev-app/abd-core';
+import { resolveInstallTargets, type DetectionResult, type InstallTarget } from '@qdev.app/abd-core';
 import { useBrowserDetection } from './use-browser-detection.js';
 
 export interface InstallDuoProps {

@@ -15,7 +15,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@qdev-app/abd-core": "workspace:*",
+    "@qdev.app/abd-core": "workspace:*",
     "esbuild": "^0.24.0"
   },
   "devDependencies": {

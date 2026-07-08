@@ -1,15 +1,15 @@
-# @qdev-app/abd-react
+# @qdev.app/abd-react
 
 React components + hook for the [Advanced Browser Detector](https://github.com/qdev-app/abd) — show the **real** browser behind a spoofed or shared User-Agent (Brave/Arc as Chrome, Zen as Firefox).
 
 ```bash
-npm i @qdev-app/abd-react @qdev-app/abd-core motion react
+npm i @qdev.app/abd-react @qdev.app/abd-core motion react
 ```
 
 ## Hook
 
 ```tsx
-import { useBrowserDetection } from '@qdev-app/abd-react';
+import { useBrowserDetection } from '@qdev.app/abd-react';
 
 function Banner() {
   const { status, result } = useBrowserDetection();
@@ -21,7 +21,7 @@ function Banner() {
 ## Components
 
 ```tsx
-import { BrowserDetector, InstallDuo } from '@qdev-app/abd-react';
+import { BrowserDetector, InstallDuo } from '@qdev.app/abd-react';
 
 // Full animated detection card
 <BrowserDetector onResult={(r) => console.log(r.browser.name, r.spoofed)} />

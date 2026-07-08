@@ -4,8 +4,8 @@ Identify the **real** browser behind a spoofed or shared User-Agent.
 
 A User-Agent string is trivially faked, and whole families of browsers deliberately reuse another browser's UA: **Brave** and **Arc** ship Chrome's UA, **Zen / Floorp / Mullvad** ship Firefox's UA, and privacy builds (**LibreWolf**, **Tor Browser**) blend in on purpose. `abd` compares the UA's *claim* against **live behavioural signals** that a page can't easily fake — `userAgentData.brands`, `navigator.brave.isBrave()`, Gecko-only `navigator.oscpu`, Arc's injected CSS variable, resist-fingerprinting tells — and flags the mismatches.
 
-- 🧠 **`@qdev-app/abd-core`** — a pure-TS detection engine (signals → ranked candidates + engine + spoof verdict)
-- ⚛️ **`@qdev-app/abd-react`** — React components + `useBrowserDetection()` hook
+- 🧠 **`@qdev.app/abd-core`** — a pure-TS detection engine (signals → ranked candidates + engine + spoof verdict)
+- ⚛️ **`@qdev.app/abd-react`** — React components + `useBrowserDetection()` hook
 - 🖥️ **`@abd/cli`** — `abd serve` captures a live signature from any browser you point at it; `abd "<ua>"` parses a UA offline
 - 🌐 **hosted UI + API** — live demo and a metered detection API at **[abd.qdev.app](https://abd.qdev.app)**
 
@@ -17,7 +17,7 @@ Uses **[bun](https://bun.sh)** as both the package manager and the launcher.
 
 ```bash
 bun install
-bun run build     # build @qdev-app/abd-core and @abd/cli
+bun run build     # build @qdev.app/abd-core and @abd/cli
 bun run test      # run the detection fixtures
 ```
 
@@ -58,16 +58,16 @@ bun run tls            # builds, then runs the HTTPS server on :4443 under Node
 
 It peeks the raw ClientHello, computes **JA4** (and JA3), then terminates TLS normally so the page still loads. Look the JA4 up in a database like [ja4db.com](https://ja4db.com) to map it to a client. (Runs under Node, not bun — bun's server-side TLS wrapping is incomplete; the `bun run tls` script handles that for you. Needs `openssl` on PATH for a throwaway dev cert.) Note: it won't separate same-engine forks — Zen and Firefox share Gecko's TLS stack.
 
-### React components — `@qdev-app/abd-react`
+### React components — `@qdev.app/abd-react`
 
 ```bash
-npm i @qdev-app/abd-react @qdev-app/abd-core motion react
+npm i @qdev.app/abd-react @qdev.app/abd-core motion react
 ```
 
 **Hook** — own your own UI:
 
 ```tsx
-import { useBrowserDetection } from '@qdev-app/abd-react';
+import { useBrowserDetection } from '@qdev.app/abd-react';
 
 const { status, result } = useBrowserDetection();
 // status === 'ready' ⇒ result.browser.name, result.spoofed, …
@@ -76,7 +76,7 @@ const { status, result } = useBrowserDetection();
 **`<BrowserDetector />`** — full animated detection card. **`<InstallDuo />`** — two live-detected install buttons (visitor's browser + its engine's mainstream browser); a button appears **only when you supply a link for it**, so a Zen visitor with just a Firefox link sees one Firefox button:
 
 ```tsx
-import { BrowserDetector, InstallDuo } from '@qdev-app/abd-react';
+import { BrowserDetector, InstallDuo } from '@qdev.app/abd-react';
 
 <BrowserDetector onResult={(r) => console.log(r.browser.name, r.spoofed)} />
 <InstallDuo links={{ chrome: '…', firefox: '…' }} />
@@ -161,8 +161,8 @@ Signatures are small `evaluate(signals) → Evidence[]` functions in `packages/c
 ## Layout
 
 ```
-packages/core   @qdev-app/abd-core  — detection engine + signal collector (framework-free)
-packages/react  @qdev-app/abd-react — React components + useBrowserDetection() hook
+packages/core   @qdev.app/abd-core  — detection engine + signal collector (framework-free)
+packages/react  @qdev.app/abd-react — React components + useBrowserDetection() hook
 packages/cli    @abd/cli            — `abd` command: serve / probe / tls / UA parsing
 ```
 
