@@ -28,14 +28,27 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       # dist is already built above, so skip the prepublishOnly rebuild.
+      # Only publish a version that isn't already on npm (idempotent re-runs).
       - name: Publish @qdev.app/abd-core
         working-directory: packages/core
-        run: npm publish --access public --ignore-scripts
+        run: |
+          V=$(node -p "require('./package.json').version")
+          if npm view "@qdev.app/abd-core@$V" version >/dev/null 2>&1; then
+            echo "@qdev.app/abd-core@$V already on npm — skipping"
+          else
+            npm publish --access public --ignore-scripts
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @qdev.app/abd-react
         working-directory: packages/react
-        run: npm publish --access public --ignore-scripts
+        run: |
+          V=$(node -p "require('./package.json').version")
+          if npm view "@qdev.app/abd-react@$V" version >/dev/null 2>&1; then
+            echo "@qdev.app/abd-react@$V already on npm — skipping"
+          else
+            npm publish --access public --ignore-scripts
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

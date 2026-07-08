@@ -1,6 +1,6 @@
 {
   "name": "@qdev.app/abd-react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React components + hook for the Advanced Browser Detector — show the real browser behind a spoofed UA",
   "license": "MIT",
   "type": "module",

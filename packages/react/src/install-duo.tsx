@@ -4,6 +4,7 @@ import * as React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { resolveInstallTargets, type DetectionResult, type InstallTarget } from '@qdev.app/abd-core';
 import { useBrowserDetection } from './use-browser-detection.js';
+import { browserIconUrl } from './icons.js';
 
 export interface InstallDuoProps {
   /** Map of browser → install URL. Only browsers you list here get a button. */
@@ -67,13 +68,19 @@ function InstallButton({ target, label, variant, delay }: { target: InstallTarge
       whileHover={{ y: -1 }}
       whileTap={{ scale: 0.97 }}
     >
-      <DownloadIcon />
+      <BrowserGlyph name={target.browser} />
       {label}
     </motion.a>
   );
 }
 
-function DownloadIcon() {
+/** Browser icon (dashboard-icons) with a graceful fallback to a download glyph. */
+function BrowserGlyph({ name }: { name: string }) {
+  const [failed, setFailed] = React.useState(false);
+  const url = browserIconUrl(name);
+  if (url && !failed) {
+    return <img src={url} alt="" width={16} height={16} className="h-4 w-4" onError={() => setFailed(true)} />;
+  }
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16" />

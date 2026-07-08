@@ -4,6 +4,7 @@ import * as React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { DetectionResult } from '@qdev.app/abd-core';
 import { useBrowserDetection } from './use-browser-detection.js';
+import { browserIconUrl } from './icons.js';
 
 export interface BrowserDetectorProps {
   /** Called once detection completes. */
@@ -55,14 +56,19 @@ function Result({ result }: { result: DetectionResult }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-neutral-400">You are using</p>
-          <motion.h2
-            className="mt-1 bg-gradient-to-br from-neutral-900 to-neutral-500 bg-clip-text text-4xl font-bold text-transparent dark:from-white dark:to-neutral-400"
+          <motion.div
+            className="mt-1 flex items-center gap-2.5"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.05 }}
           >
-            {result.browser.name}
-          </motion.h2>
+            {browserIconUrl(result.browser.name) && (
+              <img src={browserIconUrl(result.browser.name)!} alt="" width={28} height={28} className="h-7 w-7" />
+            )}
+            <h2 className="bg-gradient-to-br from-neutral-900 to-neutral-500 bg-clip-text text-4xl font-bold text-transparent dark:from-white dark:to-neutral-400">
+              {result.browser.name}
+            </h2>
+          </motion.div>
           <p className="mt-1 text-sm text-neutral-500">
             {result.engine.name} engine{result.source === 'live' ? ' · live signature' : ' · UA only'}
           </p>
